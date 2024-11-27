@@ -1,1 +1,1 @@
-# k-cse-server-diy
+# KNU CSE DIY Reservation Service
