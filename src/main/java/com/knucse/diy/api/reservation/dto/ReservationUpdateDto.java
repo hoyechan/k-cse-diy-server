@@ -8,6 +8,6 @@ import java.time.LocalTime;
 public record ReservationUpdateDto(
         @NotNull Long ReservationId,
         @NotNull LocalTime startTime, @NotNull LocalTime endTime,
-        @NotNull String reason
+        @NotNull String reason, @NotNull String authCode
         ) {
 }

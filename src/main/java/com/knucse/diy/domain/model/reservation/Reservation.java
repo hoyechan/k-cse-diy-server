@@ -63,6 +63,7 @@ public class Reservation {
         this.startTime = updateDto.startTime();
         this.endTime = updateDto.endTime();
         this.reason = updateDto.reason();
+        this.status = ReservationStatus.PENDING;
     }
 }
 

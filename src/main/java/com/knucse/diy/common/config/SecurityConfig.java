@@ -1,4 +1,4 @@
-package com.knucse.diy.authentication.config;
+package com.knucse.diy.common.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

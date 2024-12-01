@@ -3,6 +3,7 @@ package com.knucse.diy.domain.model.key;
 import com.knucse.diy.domain.model.student.Student;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.cglib.core.Local;
 
 import java.time.LocalDateTime;
 
@@ -17,8 +18,12 @@ public class Key {
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id")
+    @JoinColumn(name = "current_holder_id") // 현재 소지자
     private Student holder;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "last_user_id") // 마지막 사용자
+    private Student lastUser;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "key_status", nullable = false)
@@ -31,15 +36,20 @@ public class Key {
     private LocalDateTime rentalDateTime;
 
     @Builder
-    public Key(Student holder, KeyStatus status, LocalDateTime returnedDateTime, LocalDateTime rentalDateTime) {
+    public Key(Student holder,Student lastUser, KeyStatus status, LocalDateTime returnedDateTime, LocalDateTime rentalDateTime) {
         this.holder = holder;
+        this.lastUser = lastUser;
         this.status = status;
         this.returnedDateTime = returnedDateTime;
         this.rentalDateTime = rentalDateTime;
     }
 
-    public void updateStatus(KeyStatus status) {
+    public void updateKey(Student holder, Student lastUser, KeyStatus status, LocalDateTime returnedDateTime, LocalDateTime rentalDateTime) {
+        this.holder = holder;
+        this.lastUser = lastUser;
         this.status = status;
+        this.returnedDateTime = returnedDateTime;
+        this.rentalDateTime = rentalDateTime;
     }
 
 
