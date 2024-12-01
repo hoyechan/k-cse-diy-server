@@ -1,21 +1,26 @@
 package com.knucse.diy.domain.service.reservation;
 
+import com.knucse.diy.api.key.dto.KeyRentDto;
+import com.knucse.diy.api.key.dto.KeyReturnDto;
 import com.knucse.diy.api.reservation.dto.*;
 import com.knucse.diy.domain.exception.authcode.AuthCodeBadRequestException;
 import com.knucse.diy.domain.exception.authcode.AuthCodeMismatchException;
 import com.knucse.diy.domain.exception.reservation.ReservationDuplicatedException;
 import com.knucse.diy.domain.exception.reservation.ReservationNotFoundException;
 import com.knucse.diy.domain.exception.student.StudentNotFoundException;
+import com.knucse.diy.domain.model.key.Key;
+import com.knucse.diy.domain.model.key.KeyStatus;
 import com.knucse.diy.domain.model.reservation.Reservation;
 import com.knucse.diy.domain.model.reservation.ReservationStatus;
 import com.knucse.diy.domain.model.student.Role;
 import com.knucse.diy.domain.model.student.Student;
+import com.knucse.diy.domain.persistence.key.KeyRepository;
 import com.knucse.diy.domain.persistence.reservation.ReservationRepository;
 import com.knucse.diy.domain.persistence.student.StudentRepository;
+import com.knucse.diy.domain.service.key.KeyService;
 import com.knucse.diy.domain.service.student.StudentService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
-import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,9 +58,19 @@ class ReservationServiceIntegrationTest {
     @Autowired
     private ReservationRepository reservationRepository;
 
+    @Autowired
+    private KeyRepository keyRepository;
+
+    @Autowired
+    private KeyService keyService;
+
     @BeforeEach
     void makeStudent() {
-        studentRepository.save(new Student("12345","John Doe",Role.ROLE_STUDENT));
+        Student student = new Student("12345","John Doe",Role.ROLE_STUDENT);
+        Student student2 = new Student("123456","호예찬",Role.ROLE_STUDENT);
+        studentRepository.save(student);
+        studentRepository.save(student2);
+        keyRepository.save(new Key(null,null, KeyStatus.KEEPING, null, null));
     }
 
     @Test
@@ -186,26 +201,25 @@ class ReservationServiceIntegrationTest {
     @Test
     void findReservationsByStudent_success() {
         // Arrange
-        ReservationCreateDto createDto1 = new ReservationCreateDto(
-                "John Doe", "12345", LocalDate.now(),
-                LocalTime.of(10, 0), LocalTime.of(12, 0), "산사랑 연극 연습", "1234"
-        );
+//        ReservationCreateDto createDto1 = new ReservationCreateDto(
+//                "John Doe", "12345", LocalDate.now(),
+//                LocalTime.of(10, 0), LocalTime.of(12, 0), "지난 산사랑 연극 연습", "1234"
+//        );
         ReservationCreateDto createDto2 = new ReservationCreateDto(
                 "John Doe", "12345", LocalDate.now(),
-                LocalTime.of(9, 0), LocalTime.of(10, 0), "산사랑 연극 연습2", "1234"
+                LocalTime.of(1, 0), LocalTime.of(23, 30), "예정된 산사랑 연극 연습2", "1234"
         );
 
-        reservationService.createReservation(createDto1);
+        //reservationService.createReservation(createDto1);
         reservationService.createReservation(createDto2);
 
         // Act
-        List<ReservationReadDto> result = reservationService.findReservationsByStudent("John Doe", "12345");
+        List<ReservationReadDto> result = reservationService.findUpcomingReservationByStudent("John Doe", "12345");
 
         // Assert
         assertNotNull(result);
-        assertEquals(2, result.size());
-        assertTrue(result.stream().anyMatch(r -> r.reason().equals("산사랑 연극 연습")));
-        assertTrue(result.stream().anyMatch(r -> r.reason().equals("산사랑 연극 연습2")));
+        assertEquals(1, result.size());
+        assertTrue(result.stream().anyMatch(r -> r.reason().equals("예정된 산사랑 연극 연습2")));
     }
 
     @Test
@@ -236,22 +250,27 @@ class ReservationServiceIntegrationTest {
                 LocalTime.of(10, 0), LocalTime.of(12, 0), "산사랑 연극 연습", "1234"
         );
 
+        ReservationCreateDto createDto2 = new ReservationCreateDto(
+                "호예찬", "123456", LocalDate.now(),
+                LocalTime.of(12, 0), LocalTime.of(13, 0), "산사랑 연극 연습", "1234"
+        );
+
+
         ReservationReadDto createdReservation = reservationService.createReservation(createDto);
+        ReservationReadDto createdReservation2 = reservationService.createReservation(createDto2);
+
         ReservationUpdateDto updateDto = new ReservationUpdateDto(
-                createdReservation.id(), LocalTime.of(10,10),
-                LocalTime.of(12, 0), "수정된 산사랑 연극 연습"
+                createdReservation2.id(), LocalTime.of(12,10),
+                LocalTime.of(13, 0), "호예찬의 수정된 산사랑 연극 연습","1234"
         );
 
 
         // Act
         reservationService.updateReservation(updateDto);
 
-        // Assert
-        Reservation updatedReservation = reservationRepository.findById(createdReservation.id())
-                .orElseThrow(() -> new AssertionError("Reservation not found"));
-        assertEquals(LocalTime.of(10, 10), updatedReservation.getStartTime());
-        assertEquals(LocalTime.of(12, 0), updatedReservation.getEndTime());
-        assertEquals("수정된 산사랑 연극 연습", updatedReservation.getReason());
+        Reservation reservation = reservationService.findReservationById(updateDto.ReservationId());
+        assertEquals(reservation.getReason(),"호예찬의 수정된 산사랑 연극 연습");
+        assertEquals(reservation.getStartTime(),LocalTime.of(12,10));
     }
 
     @Test
@@ -272,5 +291,41 @@ class ReservationServiceIntegrationTest {
         assertThrows(ReservationNotFoundException.class,
                 () -> reservationService.findReservationById(createdReservation.id()));
     }
+
+    @Test
+    void keyRentAndReturn_success(){
+        ReservationCreateDto createDto = new ReservationCreateDto(
+                "John Doe", "12345", LocalDate.now(),
+                LocalTime.of(5,0 ), LocalTime.of(5, 50), "가까운 산사랑 연극 연습", "1234"
+        );
+
+        ReservationReadDto reservation = reservationService.createReservation(createDto);
+
+        Student student = studentService.findStudentByNameAndNumber("John Doe", "12345");
+
+        KeyRentDto keyRentDto = new KeyRentDto("John Doe", "12345");
+
+        String s = keyService.rentKey(keyRentDto);
+
+        Key key = keyService.findKeyById(1L);
+        System.out.println("key.getStatus() = " + key.getStatus());
+        System.out.println("key.getHolder() = " + key.getHolder());
+        System.out.println("key.getLastUser() = " + key.getLastUser());
+        System.out.println("key.getRentalDateTime() = " + key.getRentalDateTime());
+        System.out.println("key.getReturnedDateTime() = " + key.getReturnedDateTime());
+        System.out.println("s = " + s);
+
+        KeyReturnDto returnDto = new KeyReturnDto("John Doe", "12345", "1234");
+        keyService.returnKey(returnDto);
+        System.out.println("----------------------------------------");
+        System.out.println("key.getStatus() = " + key.getStatus());
+        System.out.println("key.getHolder() = " + key.getHolder());
+        System.out.println("key.getLastUser() = " + key.getLastUser());
+        System.out.println("key.getRentalDateTime() = " + key.getRentalDateTime());
+        System.out.println("key.getReturnedDateTime() = " + key.getReturnedDateTime());
+
+    }
+
+
 
 }

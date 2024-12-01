@@ -14,6 +14,8 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
 
     List<Reservation> findByReservationDate(LocalDate reservationDate);
 
+    Optional<Reservation> findByStudentAndReservationDate(Student student, LocalDate reservationDate);
+
     List<Reservation> findByReservationDateBetween(LocalDate startDate, LocalDate endDate);
     List<Reservation> findByStudent(Student student);
 }

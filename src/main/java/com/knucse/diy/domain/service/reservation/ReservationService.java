@@ -10,19 +10,20 @@ import com.knucse.diy.domain.model.student.Student;
 import com.knucse.diy.domain.persistence.reservation.ReservationRepository;
 import com.knucse.diy.domain.service.student.StudentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import com.knucse.diy.domain.exception.student.StudentNotFoundException;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.knucse.diy.common.util.datetime.DateTimeUtil.isBetweenInclusive;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -40,23 +41,20 @@ public class ReservationService {
      * @return 생성된 Reservation의 readDto
      * @throws StudentNotFoundException "STUDENT_NOT_FOUND"
      * @throws ReservationDuplicatedException "RESERVATION_DUPLICATED"
-     * @throws AuthCodeBadRequestException "AUTHENTICATION_CODE_MUST_BE_4_DIGITS";
+     * @throws AuthCodeBadRequestException "AUTHENTICATION_CODE_MUST_BE_4_DIGITS"
      */
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    ReservationReadDto createReservation(ReservationCreateDto createDto)
+    public ReservationReadDto createReservation(ReservationCreateDto createDto)
     {
         Student student = retrieveStudent(createDto);
 
-        List<Reservation> reservations = findReservationByDate(createDto.reservationDate());
-        //예약 신청한 날짜,시간과 겹치는 예약이 있다면 예외처리
-        if(!reservations.isEmpty()){
-            for(Reservation reservation : reservations){
-                if (isBetweenInclusive(createDto.startTime(),reservation.getStartTime(),reservation.getEndTime())
-                ||  isBetweenInclusive(createDto.endTime(), reservation.getStartTime(), reservation.getEndTime())) {
-                    throw new ReservationDuplicatedException();
-                }
-            }
+        Reservation reservationByStudentAndDate = findReservationsByStudentAndDate(student, createDto.reservationDate());
+
+        //한 학생은 하루에 한 예약만 할 수 있습니다
+        if(reservationByStudentAndDate != null){
+            throw new ReservationDuplicatedException();
         }
+
 
         String authCode = createDto.authCode();
         //인증번호 길이가 4자리 숫자가 아니라면 예외처리
@@ -66,8 +64,15 @@ public class ReservationService {
 
         String hashedCode = passwordEncoder.encode(authCode); // 인증번호 해싱
 
-        Reservation reservation = reservationRepository.save(createDto.toEntity(student,hashedCode));
-        return ReservationReadDto.fromEntity(reservation);
+        Reservation reservation = createDto.toEntity(student, hashedCode);
+
+        //겹치는 시간대의 예약이 있는지 확인
+        if(isReservationTimeOverlapping(reservation)){
+            Reservation savedReservation = reservationRepository.save(reservation);
+            return ReservationReadDto.fromEntity(savedReservation);
+        }else {
+            throw new ReservationDuplicatedException();
+        }
     }
 
     /**
@@ -76,7 +81,7 @@ public class ReservationService {
      * @return 조회된 reservation
      * @throws ReservationNotFoundException "RESERVATION_NOT_FOUND"
      */
-    Reservation findReservationById(Long reservationId){
+    public Reservation findReservationById(Long reservationId){
         return reservationRepository.findById(reservationId)
                 .orElseThrow(ReservationNotFoundException::new);
     }
@@ -87,9 +92,22 @@ public class ReservationService {
      * @param reservationDate LocalDate
      * @return 조회된 reservation entity List 혹은 empty List
      */
-    private List<Reservation> findReservationByDate(LocalDate reservationDate){
+    public List<Reservation> findReservationByDate(LocalDate reservationDate){
         return reservationRepository.findByReservationDate(reservationDate);
     }
+
+    /**
+     * reservationDate와 학생을 기반으로 reservation을 조회합니다.
+     * @param student Student
+     * @param date LocalDate
+     * @return 조회된 reservation entity 혹은 null
+     */
+    public Reservation findReservationsByStudentAndDate(Student student, LocalDate date) {
+        return reservationRepository.findByStudentAndReservationDate(student, date)
+                .orElse(null); // Optional을 처리하여 null 반환
+    }
+
+
 
     /**
      * reservationMonth(특정 월)을 기반으로 reservation을 조회합니다.
@@ -141,6 +159,75 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 특정 학생의 이름과 학번을 기반으로, 앞으로 예정된 예약을 조회합니다.
+     * @param studentName String
+     * @param studentNumber String
+     * @return 해당 학생의 ReservationReadDto List 혹은 empty List
+     * @throws StudentNotFoundException "STUDENT_NOT_FOUND"
+     */
+    public List<ReservationReadDto> findUpcomingReservationByStudent(String studentName, String studentNumber){
+        Student student = studentService.findStudentByNameAndNumber(studentName, studentNumber);
+
+        List<Reservation> reservations = reservationRepository.findByStudent(student);
+
+        //현재 시점으로부터 예약 시작이 이후인 예약들만 반환
+        LocalDateTime now = LocalDateTime.now();
+
+        // 현재 시점 이후에 시작하는 예약들 필터링
+        List<ReservationReadDto> upcomingReservations = reservations.stream()
+                .filter(reservation -> {
+                    LocalDateTime reservationStart = LocalDateTime.of(reservation.getReservationDate(), reservation.getStartTime());
+                    return reservationStart.isAfter(now); // 예약 시작 시간이 현재 시점 이후인 경우
+                })
+                .map(ReservationReadDto::fromEntity) // Reservation -> ReservationReadDto 변환
+                .collect(Collectors.toList());
+
+        return upcomingReservations;
+    }
+
+//    /**
+//     * ReservationId를 기반으로 해당 reservation이 현재 시점으로부터 30분 이내에 있는지 확인
+//     * @param reservationId Long
+//     * @return 30분 이후라면 true, 아니라면 false
+//     */
+//    public boolean isReservationWithin30Minutes(Long reservationId) {
+//        // 예약 정보 조회
+//        Reservation reservation = findReservationById(reservationId);
+//
+//        // 현재 시점 계산
+//        LocalDateTime now = LocalDateTime.now();
+//        LocalDateTime reservationStart = LocalDateTime.of(reservation.getReservationDate(), reservation.getStartTime());
+//
+//        // 시작 시간과 현재 시간의 차이 계산
+//        long differenceInMinutes = Duration.between(now, reservationStart).toMinutes();
+//
+//        // 시작 시간이 현재 시점으로부터 30분 이하 남아 있는지 확인
+//        return differenceInMinutes < 30;
+//    }
+
+
+    /**
+     * 입력받은 reservation을 기반으로 겹치는 시간대의 reservation이 있는지 검사
+     * @param reservation Reservation
+     * @return 겹치는 시간대의 reservation이 없다면 False, 있다면 true
+     * @throws ReservationDuplicatedException "RESERVATION_DUPLICATED"
+     */
+    public boolean isReservationTimeOverlapping(Reservation reservation){
+        List<Reservation> reservations = findReservationByDate(reservation.getReservationDate());
+
+        //예약 신청한 날짜,시간과 겹치는 예약이 있다면 true 반환
+        if(!reservations.isEmpty()){
+            for(Reservation checkReservation : reservations){
+                if (isBetweenInclusive(reservation.getStartTime(),checkReservation.getStartTime(),checkReservation.getEndTime())
+                        ||  isBetweenInclusive(reservation.getEndTime(), checkReservation.getStartTime(), checkReservation.getEndTime())) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
 
     /**
      * 입력받은 authCode와 reservation의 authCode가 일치하는지 검사합니다.
@@ -170,14 +257,22 @@ public class ReservationService {
 
     /**
      * ReservationUpdateDto를 기반으로 reservation을 수정합니다.
+     *
      * @param updateDto ReservationUpdateDto
-     * @throws ReservationNotFoundException "RESERVATION_NOT_FOUND"
+     * @throws ReservationNotFoundException   "RESERVATION_NOT_FOUND"
+     * @throws AuthCodeMismatchException      "AUTH CODE MISMATCH"
+     * @throws ReservationDuplicatedException "RESERVATION_DUPLICATED"
      */
     @Transactional
     public void updateReservation(ReservationUpdateDto updateDto){
         Reservation reservation = findReservationById(updateDto.ReservationId());
+        verifyAuthCode(updateDto.ReservationId(), updateDto.authCode());
 
         reservation.updateReservation(updateDto);
+
+        if(!isReservationTimeOverlapping(reservation)){
+            throw new ReservationDuplicatedException();
+        }
     }
 
     /**
