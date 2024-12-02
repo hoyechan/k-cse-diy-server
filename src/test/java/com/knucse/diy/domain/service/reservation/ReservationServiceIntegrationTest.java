@@ -7,41 +7,33 @@ import com.knucse.diy.domain.exception.authcode.AuthCodeBadRequestException;
 import com.knucse.diy.domain.exception.authcode.AuthCodeMismatchException;
 import com.knucse.diy.domain.exception.reservation.ReservationDuplicatedException;
 import com.knucse.diy.domain.exception.reservation.ReservationNotFoundException;
-import com.knucse.diy.domain.exception.student.StudentNotFoundException;
-import com.knucse.diy.domain.model.key.Key;
-import com.knucse.diy.domain.model.key.KeyStatus;
+import com.knucse.diy.domain.model.key.RoomKey;
+import com.knucse.diy.domain.model.key.RoomKeyHistory;
+import com.knucse.diy.domain.model.key.RoomKeyStatus;
 import com.knucse.diy.domain.model.reservation.Reservation;
 import com.knucse.diy.domain.model.reservation.ReservationStatus;
 import com.knucse.diy.domain.model.student.Role;
 import com.knucse.diy.domain.model.student.Student;
-import com.knucse.diy.domain.persistence.key.KeyRepository;
+import com.knucse.diy.domain.persistence.key.RoomKeyHistoryRepository;
+import com.knucse.diy.domain.persistence.key.RoomKeyRepository;
 import com.knucse.diy.domain.persistence.reservation.ReservationRepository;
 import com.knucse.diy.domain.persistence.student.StudentRepository;
-import com.knucse.diy.domain.service.key.KeyService;
+import com.knucse.diy.domain.service.key.RoomKeyService;
 import com.knucse.diy.domain.service.student.StudentService;
 import jakarta.transaction.Transactional;
-import jakarta.validation.constraints.NotNull;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.test.annotation.Rollback;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.YearMonth;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+
 @SpringBootTest
 @Transactional
 class ReservationServiceIntegrationTest {
@@ -59,10 +51,13 @@ class ReservationServiceIntegrationTest {
     private ReservationRepository reservationRepository;
 
     @Autowired
-    private KeyRepository keyRepository;
+    private RoomKeyRepository keyRepository;
 
     @Autowired
-    private KeyService keyService;
+    private RoomKeyService keyService;
+
+    @Autowired
+    private RoomKeyHistoryRepository roomKeyHistoryRepository;
 
     @BeforeEach
     void makeStudent() {
@@ -70,7 +65,7 @@ class ReservationServiceIntegrationTest {
         Student student2 = new Student("123456","호예찬",Role.ROLE_STUDENT);
         studentRepository.save(student);
         studentRepository.save(student2);
-        keyRepository.save(new Key(null,null, KeyStatus.KEEPING, null, null));
+        keyRepository.save(new RoomKey(null, RoomKeyStatus.KEEPING));
     }
 
     @Test
@@ -296,33 +291,36 @@ class ReservationServiceIntegrationTest {
     void keyRentAndReturn_success(){
         ReservationCreateDto createDto = new ReservationCreateDto(
                 "John Doe", "12345", LocalDate.now(),
-                LocalTime.of(5,0 ), LocalTime.of(5, 50), "가까운 산사랑 연극 연습", "1234"
+                LocalTime.of(16,10 ), LocalTime.of(17, 11), "가까운 산사랑 연극 연습", "1234"
         );
 
         ReservationReadDto reservation = reservationService.createReservation(createDto);
-
         Student student = studentService.findStudentByNameAndNumber("John Doe", "12345");
 
         KeyRentDto keyRentDto = new KeyRentDto("John Doe", "12345");
-
         String s = keyService.rentKey(keyRentDto);
 
-        Key key = keyService.findKeyById(1L);
-        System.out.println("key.getStatus() = " + key.getStatus());
-        System.out.println("key.getHolder() = " + key.getHolder());
-        System.out.println("key.getLastUser() = " + key.getLastUser());
-        System.out.println("key.getRentalDateTime() = " + key.getRentalDateTime());
-        System.out.println("key.getReturnedDateTime() = " + key.getReturnedDateTime());
+        RoomKey key = keyService.findKeyById(1L);
+
+        assertEquals(key.getHolder().getStudentName(),"John Doe");
+        assertEquals(key.getStatus(), RoomKeyStatus.USING);
+
+
         System.out.println("s = " + s);
 
         KeyReturnDto returnDto = new KeyReturnDto("John Doe", "12345", "1234");
         keyService.returnKey(returnDto);
         System.out.println("----------------------------------------");
-        System.out.println("key.getStatus() = " + key.getStatus());
-        System.out.println("key.getHolder() = " + key.getHolder());
-        System.out.println("key.getLastUser() = " + key.getLastUser());
-        System.out.println("key.getRentalDateTime() = " + key.getRentalDateTime());
-        System.out.println("key.getReturnedDateTime() = " + key.getReturnedDateTime());
+
+        assertNull(key.getHolder());
+        assertEquals(key.getStatus(), RoomKeyStatus.KEEPING);
+
+        List<RoomKeyHistory> byStudentId = roomKeyHistoryRepository.findByStudentName(student.getStudentName());
+        for(RoomKeyHistory roomKeyHistory : byStudentId){
+            System.out.println("roomKeyHistory.getStudent().getStudentName() = " + roomKeyHistory.getStudentName());
+            System.out.println("roomKeyHistory.getStatus() = " + roomKeyHistory.getStatus());
+            System.out.println("roomKeyHistory.getDate() = " + roomKeyHistory.getDate());
+        }
 
     }
 
