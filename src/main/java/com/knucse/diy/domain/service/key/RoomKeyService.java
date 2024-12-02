@@ -26,7 +26,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class RoomKeyService {
 
-    private final RoomKeyRepository keyRepository;
+    private final RoomKeyRepository roomKeyRepository;
     private final ReservationService reservationService;
     private final StudentService studentService;
     private final RoomKeyHistoryRepository roomKeyHistoryRepository;
@@ -47,7 +47,15 @@ public class RoomKeyService {
      * @return 조회된 모든 Key 혹은 empty List
      */
     private List<RoomKey> findAllKey(){
-        return keyRepository.findAll();
+        return roomKeyRepository.findAll();
+    }
+
+    /**
+     * 제일 처음 등록된 RoomKey 가져오기
+     */
+    public RoomKey findFirstKey() {
+        return roomKeyRepository.findFirstKey()
+                .orElseThrow(KeyNotFoundException::new);
     }
 
     /**
@@ -57,7 +65,7 @@ public class RoomKeyService {
      * @throws KeyNotFoundException "KEY_NOT_FOUND"
      */
     public RoomKey findKeyById(Long id){
-        return keyRepository.findById(id)
+        return roomKeyRepository.findById(id)
                 .orElseThrow(KeyNotFoundException::new);
     }
 //
@@ -80,7 +88,7 @@ public class RoomKeyService {
      */
     @Transactional
     public String rentKey(KeyRentDto keyRentDto){
-        RoomKey roomKey = findKeyById(1L); //우선 key id는 1L로 고정
+        RoomKey roomKey = findFirstKey(); //첫번째로 저장된 key 가져옴
 
         Student holder = studentService.findStudentByNameAndNumber(keyRentDto.StudentName(), keyRentDto.StudentNumber());
 
@@ -137,7 +145,7 @@ public class RoomKeyService {
     public void returnKey(KeyReturnDto keyReturnDto){
         Student lastUser = studentService.findStudentByNameAndNumber(keyReturnDto.StudentName(), keyReturnDto.StudentNumber());
 
-        RoomKey roomKey = findKeyById(1L);
+        RoomKey roomKey = findFirstKey();
 
         //열쇠의 상태가 사용중이 아닌데, 반납을 누를 시 예외처리
         if(roomKey.getStatus() != RoomKeyStatus.USING){
@@ -181,7 +189,10 @@ public class RoomKeyService {
         }
     }
 
-
+    public void updateRoomKey(Student student, RoomKeyStatus roomKeyStatus){
+        RoomKey key = findFirstKey();
+        key.updateRoomKey(student, roomKeyStatus);
+    }
 
 
     /**
@@ -190,11 +201,11 @@ public class RoomKeyService {
      * @throws KeyNotFoundException "KEY_NOT_FOUND"
      */
     @Transactional
-    public void deleteReservation(Long keyId){
-        RoomKey key = keyRepository.findById(keyId)
+    public void deleteRoomKey(Long keyId){
+        RoomKey key = roomKeyRepository.findById(keyId)
                 .orElseThrow(KeyNotFoundException::new);
 
-        keyRepository.delete(key);
+        roomKeyRepository.delete(key);
     }
 
 }

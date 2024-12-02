@@ -18,6 +18,7 @@ import com.knucse.diy.domain.persistence.key.RoomKeyHistoryRepository;
 import com.knucse.diy.domain.persistence.key.RoomKeyRepository;
 import com.knucse.diy.domain.persistence.reservation.ReservationRepository;
 import com.knucse.diy.domain.persistence.student.StudentRepository;
+import com.knucse.diy.domain.scheduler.RoomKeyScheduler;
 import com.knucse.diy.domain.service.key.RoomKeyService;
 import com.knucse.diy.domain.service.student.StudentService;
 import jakarta.transaction.Transactional;
@@ -25,6 +26,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Rollback;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -58,6 +60,9 @@ class ReservationServiceIntegrationTest {
 
     @Autowired
     private RoomKeyHistoryRepository roomKeyHistoryRepository;
+
+    @Autowired
+    private RoomKeyScheduler roomKeyScheduler;
 
     @BeforeEach
     void makeStudent() {
@@ -202,7 +207,7 @@ class ReservationServiceIntegrationTest {
 //        );
         ReservationCreateDto createDto2 = new ReservationCreateDto(
                 "John Doe", "12345", LocalDate.now(),
-                LocalTime.of(1, 0), LocalTime.of(23, 30), "예정된 산사랑 연극 연습2", "1234"
+                LocalTime.of(20, 0), LocalTime.of(23, 30), "예정된 산사랑 연극 연습2", "1234"
         );
 
         //reservationService.createReservation(createDto1);
@@ -291,7 +296,7 @@ class ReservationServiceIntegrationTest {
     void keyRentAndReturn_success(){
         ReservationCreateDto createDto = new ReservationCreateDto(
                 "John Doe", "12345", LocalDate.now(),
-                LocalTime.of(16,10 ), LocalTime.of(17, 11), "가까운 산사랑 연극 연습", "1234"
+                LocalTime.of(18,40 ), LocalTime.of(18, 55), "가까운 산사랑 연극 연습", "1234"
         );
 
         ReservationReadDto reservation = reservationService.createReservation(createDto);
@@ -300,7 +305,7 @@ class ReservationServiceIntegrationTest {
         KeyRentDto keyRentDto = new KeyRentDto("John Doe", "12345");
         String s = keyService.rentKey(keyRentDto);
 
-        RoomKey key = keyService.findKeyById(1L);
+        RoomKey key = keyService.findFirstKey();
 
         assertEquals(key.getHolder().getStudentName(),"John Doe");
         assertEquals(key.getStatus(), RoomKeyStatus.USING);
@@ -324,6 +329,23 @@ class ReservationServiceIntegrationTest {
 
     }
 
+    @Test
+    void keyScheduler_test(){
+        ReservationCreateDto createDto = new ReservationCreateDto(
+                "John Doe", "12345", LocalDate.now(),
+                LocalTime.of(16,10 ), LocalTime.of(17, 11), "가까운 산사랑 연극 연습", "1234"
+        );
 
+        ReservationReadDto reservation = reservationService.createReservation(createDto);
+        Student student = studentService.findStudentByNameAndNumber("John Doe", "12345");
 
+        keyService.updateRoomKey(student,RoomKeyStatus.USING);
+
+        RoomKey key = keyService.findFirstKey();
+
+        roomKeyScheduler.checkKeyReturnStatus();
+
+        assertEquals(key.getStatus(),RoomKeyStatus.NOT_RETURNED);
+        assertNull(key.getHolder());
+    }
 }
