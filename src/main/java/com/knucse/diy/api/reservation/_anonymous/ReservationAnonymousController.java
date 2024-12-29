@@ -47,7 +47,7 @@ public class ReservationAnonymousController {
                 .body(ApiResponseUtil.success(HttpStatus.CREATED, responseBody));
     }
 
-    @GetMapping("/reservation/{studentName}/{studentNumber}")
+    @GetMapping("/reservation/student/{studentName}/{studentNumber}")
     @Operation(summary = "특정 학생의 예약 조회", description = "사용자는 이름과 학번으로 예약을 조회할 수 있습니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "예약 조회 성공"),
@@ -64,7 +64,7 @@ public class ReservationAnonymousController {
                 .body(ApiResponseUtil.success(HttpStatus.OK, responseBody));
     }
 
-    @GetMapping("/reservation/{year}/{month}")
+    @GetMapping("/reservation/date/{year}/{month}")
     @Operation(summary = "예약 월별로 조회", description = "사용자는 월별로 예약 정보를 조회할 수 있습니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "예약 조회 성공"),
