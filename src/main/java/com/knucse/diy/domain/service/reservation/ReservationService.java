@@ -6,6 +6,7 @@ import com.knucse.diy.domain.exception.authcode.AuthCodeMismatchException;
 import com.knucse.diy.domain.exception.reservation.ReservationDuplicatedException;
 import com.knucse.diy.domain.exception.reservation.ReservationNotFoundException;
 import com.knucse.diy.domain.model.reservation.Reservation;
+import com.knucse.diy.domain.model.reservation.ReservationStatus;
 import com.knucse.diy.domain.model.student.Student;
 import com.knucse.diy.domain.persistence.reservation.ReservationRepository;
 import com.knucse.diy.domain.service.student.StudentService;
@@ -48,9 +49,11 @@ public class ReservationService {
     {
         Student student = retrieveStudent(createDto);
 
+
         Reservation reservationByStudentAndDate = findReservationsByStudentAndDate(student, createDto.reservationDate());
 
-        //한 학생은 하루에 한 예약만 할 수 있습니다
+
+        //한 학생은 한 날짜에 두번 예약할 수 없습니다
         if(reservationByStudentAndDate != null){
             throw new ReservationDuplicatedException();
         }
@@ -247,12 +250,15 @@ public class ReservationService {
      * ReservationStatusUpdateDto를 기반으로 reservationStatus를 수정합니다.
      * @param updateDto ReservationUpdateDto
      * @throws ReservationNotFoundException "RESERVATION_NOT_FOUND"
+     * @return 바뀐 Reservation의 ReadDto
      */
     @Transactional
-    public void updateReservationStatus(ReservationStatusUpdateDto updateDto) {
+    public ReservationReadDto updateReservationStatus(ReservationStatusUpdateDto updateDto) {
         Reservation reservation = findReservationById(updateDto.reservationId());
 
         reservation.updateStatus(updateDto.reservationStatus());
+
+        return ReservationReadDto.fromEntity(reservation);
     }
 
     /**
