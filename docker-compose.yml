@@ -33,9 +33,7 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
     ports:
-      - ${DB_PORT}:${DB_PORT}
-    command:
-      - --port=${DB_PORT}
+      - "52002:3306"
     volumes:
       - k-cse-diy-database:/var/lib/mysql
 
