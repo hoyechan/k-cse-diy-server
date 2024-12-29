@@ -20,6 +20,8 @@ services:
       - ${SPRING_PORT}
     ports:
       - ${SPRING_PORT}:${SPRING_PORT}
+    networks:
+      - k-cse-diy-network
 
   k-cse-diy-database:
     image: mysql:8.0
@@ -36,6 +38,12 @@ services:
       - "52002:3306"
     volumes:
       - k-cse-diy-database:/var/lib/mysql
+    networks:
+      - k-cse-diy-network
 
 volumes:
   k-cse-diy-database:
+
+networks:
+  k-cse-diy-network:
+    driver: bridge
