@@ -11,22 +11,3 @@
             properties:
                 hibernate:
                     dialect: org.hibernate.dialect.MySQLDialect
-    security:
-        oauth2:
-            client:
-                registration:
-                    google:
-                        client-id: ${GOOGLE_CLIENT_ID} # Replace GOOGLE_CLIENT_ID with your Google client ID
-                        client-secret: ${GOOGLE_CLIENT_SECRET} # Replace GOOGLE_CLIENT_SECRET with your Google client secret
-                        redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8080/login/oauth2/code/google} # Default redirect URI
-                        scope: email, profile # Scopes required for Google login
-
-    app:
-        jwt:
-            secret: ${JWT_SECRET} # Replace JWT_SECRET with your JWT secret key
-            bearer-type: Bearer
-            expiration:
-                access: 259200 # 60 * 60 * 24 * 3 (3 days)
-                refresh: 1296000 # 60 * 60 * 24 * 15 (15 days)
-        auth:
-            redirect-uri: ${OAUTH2_REDIRECT_URI:http://localhost:8080/oauth2/redirect} # Default redirect URI

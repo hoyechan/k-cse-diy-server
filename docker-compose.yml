@@ -1,0 +1,20 @@
+version: "3"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: k-cse-diy-server
+    environment:
+      - SPRING_PORT=${SPRING_PORT}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+    expose:
+      - ${SPRING_PORT}
+    ports:
+      - ${SPRING_PORT}:${SPRING_PORT}
+    restart: always
