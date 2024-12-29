@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/application")
 @RequiredArgsConstructor
-@PreAuthorize("permitAll()")
 @Tag(name = "예약 관리(동연의장)", description = "동연의장용 예약 API")
 public class ReservationDiyManagerController {
     //예약 승인, 거절 API

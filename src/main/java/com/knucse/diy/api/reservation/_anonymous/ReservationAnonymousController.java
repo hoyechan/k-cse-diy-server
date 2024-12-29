@@ -26,7 +26,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/application")
 @RequiredArgsConstructor
-@PreAuthorize("permitAll()")
 @Tag(name = "예약(사용자)", description = "사용자용 예약 API")
 public class ReservationAnonymousController {
     private final ReservationService reservationService;

@@ -85,9 +85,10 @@ public class RoomKeyService {
      * @param keyRentDto KeyRentDto
      * @return 사물함의 비밀번호
      * @throws KeyRentAuthenticationFailedException "KEY_RENT_AUTHENTICATION_FAILED"
+     * @throws com.knucse.diy.domain.exception.student.StudentNotFoundException "STUDENT_NOT_FOUND"
      */
     @Transactional
-    public String rentKey(KeyRentDto keyRentDto){
+    public RoomKeyStatus rentKey(KeyRentDto keyRentDto){
         RoomKey roomKey = findFirstKey(); //첫번째로 저장된 key 가져옴
 
         Student holder = studentService.findStudentByNameAndNumber(keyRentDto.StudentName(), keyRentDto.StudentNumber());
@@ -105,34 +106,30 @@ public class RoomKeyService {
             throw new KeyRentAuthenticationFailedException();
         }
 
-        // 예약시간 30분 전부터 예약 종료 시간까지 열쇠 대여 가능
-        LocalDateTime reservationStartTime = LocalDateTime.of(
-                reservationByStudentAndDate.getReservationDate(),
-                reservationByStudentAndDate.getStartTime()
-        );
+//        // 예약시간 30분 전부터 예약 종료 시간까지 열쇠 대여 가능
+//        LocalDateTime reservationStartTime = LocalDateTime.of(
+//                reservationByStudentAndDate.getReservationDate(),
+//                reservationByStudentAndDate.getStartTime()
+//        );
+//
+//        LocalDateTime reservationEndTime = LocalDateTime.of(
+//                reservationByStudentAndDate.getReservationDate(),
+//                reservationByStudentAndDate.getEndTime()
+//        );
+//
+//        LocalDateTime now = LocalDateTime.now();
 
-        LocalDateTime reservationEndTime = LocalDateTime.of(
-                reservationByStudentAndDate.getReservationDate(),
-                reservationByStudentAndDate.getEndTime()
-        );
+        roomKey.updateRoomKey(holder,RoomKeyStatus.USING);
 
-        LocalDateTime now = LocalDateTime.now();
-
-        if (now.isAfter(reservationStartTime.minusMinutes(30)) && now.isBefore(reservationEndTime)) {
-            roomKey.updateRoomKey(holder,RoomKeyStatus.USING);
-
-            RoomKeyHistory history = RoomKeyHistory.builder()
+        RoomKeyHistory history = RoomKeyHistory.builder()
                     .student(holder)
                     .date(LocalDateTime.now())
                     .status(RoomKeyStatus.USING)
                     .build();
 
-            roomKeyHistoryRepository.save(history);
+        roomKeyHistoryRepository.save(history);
 
-            return "1234"; // 사물함 비밀번호 return
-        } else {
-            throw new KeyRentAuthenticationFailedException();
-        }
+        return roomKey.getStatus(); // 열쇠 상태 return
     }
 
     /**
@@ -142,7 +139,7 @@ public class RoomKeyService {
      * @throws KeyNotFoundException "KET_NOT_FOUND"
      * @throws com.knucse.diy.domain.exception.student.StudentNotFoundException "STUDENT_NOT_FOUND"
      */
-    public void returnKey(KeyReturnDto keyReturnDto){
+    public RoomKeyStatus returnKey(KeyReturnDto keyReturnDto){
         Student lastUser = studentService.findStudentByNameAndNumber(keyReturnDto.StudentName(), keyReturnDto.StudentNumber());
 
         RoomKey roomKey = findFirstKey();
@@ -160,33 +157,30 @@ public class RoomKeyService {
             throw new KeyRentAuthenticationFailedException();
         }
 
-        // 예약시간 30분 전부터 예약 종료 시간까지 열쇠 대여 가능
-        LocalDateTime reservationStartTime = LocalDateTime.of(
-                reservationByStudentAndDate.getReservationDate(),
-                reservationByStudentAndDate.getStartTime()
-        );
+//        // 예약시간 30분 전부터 예약 종료 시간까지 열쇠 대여 가능
+//        LocalDateTime reservationStartTime = LocalDateTime.of(
+//                reservationByStudentAndDate.getReservationDate(),
+//                reservationByStudentAndDate.getStartTime()
+//        );
+//
+//        LocalDateTime reservationEndTime = LocalDateTime.of(
+//                reservationByStudentAndDate.getReservationDate(),
+//                reservationByStudentAndDate.getEndTime()
+//        );
+//
+//        LocalDateTime now = LocalDateTime.now();
 
-        LocalDateTime reservationEndTime = LocalDateTime.of(
-                reservationByStudentAndDate.getReservationDate(),
-                reservationByStudentAndDate.getEndTime()
-        );
+        roomKey.updateRoomKey(null,RoomKeyStatus.KEEPING);
 
-        LocalDateTime now = LocalDateTime.now();
-
-        if (now.isAfter(reservationStartTime) && now.isBefore(reservationEndTime.plusMinutes(30))) {
-            roomKey.updateRoomKey(null,RoomKeyStatus.KEEPING);
-
-            RoomKeyHistory history = RoomKeyHistory.builder()
+        RoomKeyHistory history = RoomKeyHistory.builder()
                     .student(lastUser)
                     .date(LocalDateTime.now())
                     .status(RoomKeyStatus.KEEPING)
                     .build();
 
-            roomKeyHistoryRepository.save(history);
+        roomKeyHistoryRepository.save(history);
 
-        } else {
-            throw new KeyReturnAuthenticationFailedException();
-        }
+        return roomKey.getStatus();
     }
 
     public void updateRoomKey(Student student, RoomKeyStatus roomKeyStatus){
