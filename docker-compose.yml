@@ -14,6 +14,8 @@ services:
       - DB_DATABASE=${DB_DATABASE}
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
+    depends_on:
+      - database
     expose:
       - ${SPRING_PORT}
     ports:
