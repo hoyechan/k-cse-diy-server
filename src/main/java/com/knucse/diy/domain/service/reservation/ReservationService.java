@@ -222,6 +222,11 @@ public class ReservationService {
         //예약 신청한 날짜,시간과 겹치는 예약이 있다면 true 반환
         if(!reservations.isEmpty()){
             for(Reservation checkReservation : reservations){
+
+                if(reservation.getStartTime().equals(checkReservation.getStartTime()) &&
+                        reservation.getEndTime().equals(checkReservation.getEndTime()))
+                    return true;
+
                 if (isBetweenInclusive(reservation.getStartTime(),checkReservation.getStartTime(),checkReservation.getEndTime())
                         ||  isBetweenInclusive(reservation.getEndTime(), checkReservation.getStartTime(), checkReservation.getEndTime())) {
                     return false;
