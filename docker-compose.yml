@@ -6,6 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: k-cse-diy-server
+    restart: always
     environment:
       - SPRING_PORT=${SPRING_PORT}
       - DB_HOST=${DB_HOST}
@@ -17,4 +18,24 @@ services:
       - ${SPRING_PORT}
     ports:
       - ${SPRING_PORT}:${SPRING_PORT}
+
+  database:
+    image: mysql:8.0
     restart: always
+    container_name: k-cse-diy-database
+    environment:
+      TZ: Asia/Seoul
+      LANG: C.UTF-8
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    command:
+      - --port=${DB_PORT}
+    volumes:
+      - k-cse-diy-database:/var/lib/mysql
+
+volumes:
+  k-cse-diy-database:
