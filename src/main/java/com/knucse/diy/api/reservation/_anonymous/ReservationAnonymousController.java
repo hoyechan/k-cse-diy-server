@@ -81,6 +81,18 @@ public class ReservationAnonymousController {
                 .body(ApiResponseUtil.success(HttpStatus.OK, responseBody));
     }
 
+
+
+    @GetMapping("/reservation/closest")
+    @Operation(summary = "가까운 3개의 예약 조회", description = "사용자는 가까운 예약 3개를 조회할 수 있습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "예약 조회 성공"),
+    })
+    public ResponseEntity<List<ReservationReadDto>> getClosestReservations() {
+        List<ReservationReadDto> reservations = reservationService.getClosestReservations(3); // Get up to 3 reservations
+        return ResponseEntity.ok(reservations);
+    }
+
     @PostMapping("/reservation/update")
     @Operation(summary = "예약 수정", description = "사용자는 기존 예약 정보를 수정할 수 있습니다.")
     @ApiResponses(value = {

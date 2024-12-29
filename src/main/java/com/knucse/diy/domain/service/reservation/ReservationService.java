@@ -6,18 +6,20 @@ import com.knucse.diy.domain.exception.authcode.AuthCodeMismatchException;
 import com.knucse.diy.domain.exception.reservation.ReservationDuplicatedException;
 import com.knucse.diy.domain.exception.reservation.ReservationNotFoundException;
 import com.knucse.diy.domain.model.reservation.Reservation;
-import com.knucse.diy.domain.model.reservation.ReservationStatus;
 import com.knucse.diy.domain.model.student.Student;
 import com.knucse.diy.domain.persistence.reservation.ReservationRepository;
 import com.knucse.diy.domain.service.student.StudentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Pageable;
 import com.knucse.diy.domain.exception.student.StudentNotFoundException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -188,6 +190,25 @@ public class ReservationService {
 
         return upcomingReservations;
     }
+
+    /**
+     * 현재 시점으로부터 가까운 예약을 최대 limit개 만큼 조회합니다.
+     *
+     * @param limit
+     * @return 가져온 reservation의 readDto 혹은 empty list
+     */
+    public List<ReservationReadDto> getClosestReservations(int limit) {
+        LocalDate currentDate = LocalDate.now();
+        LocalTime currentTime = LocalTime.now();
+
+        Pageable pageable = PageRequest.of(0, limit); // Maximum 'limit' reservations
+        List<Reservation> reservations = reservationRepository.findClosestReservations(currentDate, currentTime, pageable);
+
+        return reservations.stream()
+                .map(ReservationReadDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+
 
 //    /**
 //     * ReservationId를 기반으로 해당 reservation이 현재 시점으로부터 30분 이내에 있는지 확인
