@@ -20,6 +20,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.annotation.RequestScope;
 
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.List;
 
@@ -54,8 +55,8 @@ public class ReservationAnonymousController {
             @ApiResponse(responseCode = "404", description = "학생을 찾을 수 없음 (code: STUDENT_NOT_FOUND)")
     })
     public ResponseEntity<ApiSuccessResult<List<ReservationReadDto>>> findReservationByStudent(
-            @PathVariable String studentName,
-            @PathVariable String studentNumber
+            @PathVariable("studentName") String studentName,
+            @PathVariable("studentNumber") String studentNumber
     ) {
         List<ReservationReadDto> responseBody = reservationService.findReservationsByStudent(studentName, studentNumber);
 
@@ -70,11 +71,26 @@ public class ReservationAnonymousController {
             @ApiResponse(responseCode = "200", description = "예약 조회 성공"),
     })
     public ResponseEntity<ApiSuccessResult<List<ReservationReadDto>>> findReservationByYearMonth(
-            @PathVariable int year,
-            @PathVariable int month
+            @PathVariable("year") int year,
+            @PathVariable("month") int month
     ) {
         YearMonth yearMonth = YearMonth.of(year,month);
         List<ReservationReadDto> responseBody = reservationService.findReservationsByMonth(yearMonth);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponseUtil.success(HttpStatus.OK, responseBody));
+    }
+
+    @GetMapping("/reservation/week/{date}")
+    @Operation(summary = "예약 월별로 조회", description = "사용자는 월별로 예약 정보를 조회할 수 있습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "예약 조회 성공"),
+    })
+    public ResponseEntity<ApiSuccessResult<List<ReservationReadDto>>> findReservationByYearMonth(
+            @PathVariable("date")LocalDate date
+            ) {
+        List<ReservationReadDto> responseBody = reservationService.getReservationsWithinWeek(date);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -87,11 +103,27 @@ public class ReservationAnonymousController {
     @Operation(summary = "가까운 3개의 예약 조회", description = "사용자는 가까운 예약 3개를 조회할 수 있습니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "예약 조회 성공"),
+            @ApiResponse(responseCode = "404", description = "학생을 찾을 수 없음 (code: STUDENT_NOT_FOUND)")
     })
     public ResponseEntity<List<ReservationReadDto>> getClosestReservations() {
         List<ReservationReadDto> reservations = reservationService.getClosestReservations(3); // Get up to 3 reservations
         return ResponseEntity.ok(reservations);
     }
+
+    @GetMapping("/reservation/upcoming/{studentName}/{studentNumber}")
+    @Operation(summary = "다가올 예약 조회", description = "사용자는 다가올 본인의 예약을 조회할 수 있습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "예약 조회 성공"),
+            @ApiResponse(responseCode = "404", description = "학생을 찾을 수 없음 (code: STUDENT_NOT_FOUND)")
+    })
+    public ResponseEntity<List<ReservationReadDto>> getUpcomingReservations(
+            @PathVariable("studentName") String studentName,
+            @PathVariable("studentNumber") String studentNumber
+    ) {
+        List<ReservationReadDto> reservations = reservationService.findUpcomingReservationByStudent(studentName,studentNumber);
+        return ResponseEntity.ok(reservations);
+    }
+
 
     @PostMapping("/reservation/update")
     @Operation(summary = "예약 수정", description = "사용자는 기존 예약 정보를 수정할 수 있습니다.")
@@ -124,4 +156,5 @@ public class ReservationAnonymousController {
                 .status(HttpStatus.NO_CONTENT)
                 .body(ApiResponseUtil.success(HttpStatus.NO_CONTENT));
     }
+
 }

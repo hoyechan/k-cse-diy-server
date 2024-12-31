@@ -24,6 +24,17 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
     List<Reservation> findByReservationDateBetween(LocalDate startDate, LocalDate endDate);
     List<Reservation> findByStudent(Student student);
 
+    @Query("SELECT r FROM Reservation r " +
+            "WHERE r.student = :student " +
+            "AND (r.reservationDate > :nowDate OR " +
+            "(r.reservationDate = :nowDate AND r.startTime > :nowTime))")
+    List<Reservation> findUpcomingReservations(
+            @Param("student") Student student,
+            @Param("nowDate") LocalDate nowDate,
+            @Param("nowTime") LocalTime nowTime);
+
+
+
     @Query("""
             SELECT r 
             FROM Reservation r 
@@ -35,6 +46,11 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
                                               @Param("currentTime") LocalTime currentTime,
                                               Pageable pageable);
 
+    @Query("SELECT r FROM Reservation r WHERE r.reservationDate BETWEEN :startDate AND :endDate")
+    List<Reservation> findReservationsWithinDateRange(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
 
 }
 

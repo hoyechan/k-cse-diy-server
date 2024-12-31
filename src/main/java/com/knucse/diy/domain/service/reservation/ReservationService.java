@@ -174,21 +174,14 @@ public class ReservationService {
     public List<ReservationReadDto> findUpcomingReservationByStudent(String studentName, String studentNumber){
         Student student = studentService.findStudentByNameAndNumber(studentName, studentNumber);
 
-        List<Reservation> reservations = reservationRepository.findByStudent(student);
+        LocalDate nowDate = LocalDate.now();
+        LocalTime nowTime = LocalTime.now();
 
-        //현재 시점으로부터 예약 시작이 이후인 예약들만 반환
-        LocalDateTime now = LocalDateTime.now();
+        List<Reservation> reservations = reservationRepository.findUpcomingReservations(student, nowDate, nowTime);
 
-        // 현재 시점 이후에 시작하는 예약들 필터링
-        List<ReservationReadDto> upcomingReservations = reservations.stream()
-                .filter(reservation -> {
-                    LocalDateTime reservationStart = LocalDateTime.of(reservation.getReservationDate(), reservation.getStartTime());
-                    return reservationStart.isAfter(now); // 예약 시작 시간이 현재 시점 이후인 경우
-                })
-                .map(ReservationReadDto::fromEntity) // Reservation -> ReservationReadDto 변환
+        return reservations.stream()
+                .map(ReservationReadDto::fromEntity)
                 .collect(Collectors.toList());
-
-        return upcomingReservations;
     }
 
     /**
@@ -204,6 +197,18 @@ public class ReservationService {
         Pageable pageable = PageRequest.of(0, limit); // Maximum 'limit' reservations
         List<Reservation> reservations = reservationRepository.findClosestReservations(currentDate, currentTime, pageable);
 
+        return reservations.stream()
+                .map(ReservationReadDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    public List<ReservationReadDto> getReservationsWithinWeek(LocalDate targetDate) {
+        LocalDate startDate = targetDate;
+        LocalDate endDate = targetDate.plusDays(6);
+
+        List<Reservation> reservations = reservationRepository.findReservationsWithinDateRange(startDate, endDate);
+
+        // Reservation -> ReservationReadDto 변환
         return reservations.stream()
                 .map(ReservationReadDto::fromEntity)
                 .collect(Collectors.toList());

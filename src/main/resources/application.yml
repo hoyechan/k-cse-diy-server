@@ -1,5 +1,5 @@
-#server:
-#    port: ${SPRING_PORT}
+server:
+    port: ${SPRING_PORT}
 
 spring:
     datasource:
@@ -9,7 +9,7 @@ spring:
         password: ${DB_PASSWORD}
     jpa:
         hibernate:
-            ddl-auto: create
+            ddl-auto: update
         show-sql: true
         properties:
             hibernate:
