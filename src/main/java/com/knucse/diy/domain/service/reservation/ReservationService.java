@@ -5,6 +5,7 @@ import com.knucse.diy.domain.exception.authcode.AuthCodeBadRequestException;
 import com.knucse.diy.domain.exception.authcode.AuthCodeMismatchException;
 import com.knucse.diy.domain.exception.reservation.ReservationDuplicatedException;
 import com.knucse.diy.domain.exception.reservation.ReservationNotFoundException;
+import com.knucse.diy.domain.exception.reservation.ReservationLimitReachedException;
 import com.knucse.diy.domain.model.reservation.Reservation;
 import com.knucse.diy.domain.model.student.Student;
 import com.knucse.diy.domain.persistence.reservation.ReservationRepository;
@@ -45,6 +46,7 @@ public class ReservationService {
      * @throws StudentNotFoundException "STUDENT_NOT_FOUND"
      * @throws ReservationDuplicatedException "RESERVATION_DUPLICATED"
      * @throws AuthCodeBadRequestException "AUTHENTICATION_CODE_MUST_BE_4_DIGITS"
+     * @throws ReservationLimitReachedException "DAILY_LIMIT_REACHED"
      */
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public ReservationReadDto createReservation(ReservationCreateDto createDto)
@@ -202,13 +204,30 @@ public class ReservationService {
     }
 
     /**
-     * targetDate를 기준으로 일주일 안에 있는 예약을 가져옵니다.
+     * targetDate과 minusDay, plusDay로 정해진 범위의 예약을 가져옵니다.
      * @param targetDate LocalDate
      * @return 가져온 reservation의 ReadDtoList 혹은 빈 리스트
      */
-    public List<ReservationReadDto> getReservationsWithinWeek(LocalDate targetDate) {
+    public List<ReservationReadDto> getReservationsWithinRange(LocalDate targetDate,long minusDay, long plusDay) {
+        LocalDate startDate = targetDate.minusDays(minusDay);
+        LocalDate endDate = targetDate.plusDays(plusDay);
+
+        List<Reservation> reservations = reservationRepository.findReservationsWithinDateRange(startDate, endDate);
+
+        // Reservation -> ReservationReadDto 변환
+        return reservations.stream()
+                .map(ReservationReadDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * targetDate를 기준으로 3일 안에 있는 예약을 가져옵니다.
+     * @param targetDate LocalDate
+     * @return 가져온 reservation의 ReadDtoList 혹은 빈 리스트
+     */
+    public List<ReservationReadDto> getReservationsWithinThreeDay(LocalDate targetDate) {
         LocalDate startDate = targetDate;
-        LocalDate endDate = targetDate.plusDays(6);
+        LocalDate endDate = targetDate.plusDays(2);
 
         List<Reservation> reservations = reservationRepository.findReservationsWithinDateRange(startDate, endDate);
 

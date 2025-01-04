@@ -37,6 +37,7 @@ public class ReservationAnonymousController {
             @ApiResponse(responseCode = "201", description = "예약 생성 성공"),
             @ApiResponse(responseCode = "404", description = "학생을 찾을 수 없음 (code: STUDENT_NOT_FOUND)"),
             @ApiResponse(responseCode = "409", description = "시간이 중복되는 예약이 존재함 (code: RESERVATION_DUPLICATED)"),
+            @ApiResponse(responseCode = "409", description = "하루에 하나의 예약만 가능함 (code: DAILY_LIMIT_REACHED"),
             @ApiResponse(responseCode = "400", description = "인증 코드는 4자리 숫자여야함 (code: AUTHENTICATION_CODE_MUST_BE_4_DIGITS)")
     })
     public ResponseEntity<ApiSuccessResult<ReservationReadDto>> createReservation(
@@ -82,18 +83,20 @@ public class ReservationAnonymousController {
                 .body(ApiResponseUtil.success(HttpStatus.OK, responseBody));
     }
 
-    @GetMapping("/reservation/week/{year}/{month}/{date}")
-    @Operation(summary = "예약 주별로 조회", description = "사용자는 주별로 예약 정보를 조회할 수 있습니다.")
+    @GetMapping("/reservation/limit/{year}/{month}/{date}")
+    @Operation(summary = "범위 안의 예약 조회", description = "사용자는 특정 범위의 예약을 조회할 수 있습니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "예약 조회 성공"),
     })
     public ResponseEntity<ApiSuccessResult<List<ReservationReadDto>>> findReservationByYearMonth(
             @PathVariable("year") int year,
             @PathVariable("month") int month,
-            @PathVariable("date") int date
+            @PathVariable("date") int date,
+            @RequestParam("minusDay") long minusDay,
+            @RequestParam("plusDay") long plusDay
             ) {
         LocalDate targetDate = LocalDate.of(year, month, date);
-        List<ReservationReadDto> responseBody = reservationService.getReservationsWithinWeek(targetDate);
+        List<ReservationReadDto> responseBody = reservationService.getReservationsWithinRange(targetDate, minusDay,plusDay);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

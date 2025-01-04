@@ -1,6 +1,7 @@
 package com.knucse.diy.domain.model.reservation;
 
 import com.knucse.diy.api.reservation.dto.ReservationUpdateDto;
+import com.knucse.diy.domain.model.base.BaseTimeEntity;
 import com.knucse.diy.domain.model.student.Student;
 import jakarta.persistence.*;
 import lombok.*;
@@ -12,7 +13,7 @@ import java.time.LocalTime;
 @Getter @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "reservation")
-public class Reservation {
+public class Reservation extends BaseTimeEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "reservation_id")

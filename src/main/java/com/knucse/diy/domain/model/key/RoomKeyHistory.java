@@ -1,5 +1,6 @@
 package com.knucse.diy.domain.model.key;
 
+import com.knucse.diy.domain.model.base.BaseTimeEntity;
 import com.knucse.diy.domain.model.student.Student;
 import jakarta.persistence.*;
 import lombok.*;
@@ -10,7 +11,7 @@ import java.time.LocalDateTime;
 @Getter @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "room_key_history")
-public class RoomKeyHistory {
+public class RoomKeyHistory extends BaseTimeEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "history_id")
