@@ -123,7 +123,6 @@ public class ReservationService {
     public List<ReservationReadDto> findReservationsByMonth(YearMonth yearMonth) {
         LocalDate startOfMonth = yearMonth.atDay(1); // 해당 월의 첫 번째 날
         LocalDate endOfMonth = yearMonth.atEndOfMonth(); // 해당 월의 마지막 날
-
         List<Reservation> reservations = reservationRepository.findByReservationDateBetween(startOfMonth, endOfMonth);
 
         // Reservation -> ReservationReadDto 변환
@@ -202,6 +201,11 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * targetDate를 기준으로 일주일 안에 있는 예약을 가져옵니다.
+     * @param targetDate LocalDate
+     * @return 가져온 reservation의 ReadDtoList 혹은 빈 리스트
+     */
     public List<ReservationReadDto> getReservationsWithinWeek(LocalDate targetDate) {
         LocalDate startDate = targetDate;
         LocalDate endDate = targetDate.plusDays(6);

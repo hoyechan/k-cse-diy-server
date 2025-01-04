@@ -82,15 +82,18 @@ public class ReservationAnonymousController {
                 .body(ApiResponseUtil.success(HttpStatus.OK, responseBody));
     }
 
-    @GetMapping("/reservation/week/{date}")
-    @Operation(summary = "예약 월별로 조회", description = "사용자는 월별로 예약 정보를 조회할 수 있습니다.")
+    @GetMapping("/reservation/week/{year}/{month}/{date}")
+    @Operation(summary = "예약 주별로 조회", description = "사용자는 주별로 예약 정보를 조회할 수 있습니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "예약 조회 성공"),
     })
     public ResponseEntity<ApiSuccessResult<List<ReservationReadDto>>> findReservationByYearMonth(
-            @PathVariable("date")LocalDate date
+            @PathVariable("year") int year,
+            @PathVariable("month") int month,
+            @PathVariable("date") int date
             ) {
-        List<ReservationReadDto> responseBody = reservationService.getReservationsWithinWeek(date);
+        LocalDate targetDate = LocalDate.of(year, month, date);
+        List<ReservationReadDto> responseBody = reservationService.getReservationsWithinWeek(targetDate);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
