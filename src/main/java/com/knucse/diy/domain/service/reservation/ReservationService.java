@@ -278,8 +278,10 @@ public class ReservationService {
                 }
 
                 if(reservation.getStartTime().equals(checkReservation.getStartTime()) &&
-                        reservation.getEndTime().equals(checkReservation.getEndTime()))
+                        reservation.getEndTime().equals(checkReservation.getEndTime())){
                     return true;
+                }
+
 
                 if (isBetweenInclusive(reservation.getStartTime(),checkReservation.getStartTime(),checkReservation.getEndTime())
                         ||  isBetweenInclusive(reservation.getEndTime(), checkReservation.getStartTime(), checkReservation.getEndTime())) {
@@ -292,7 +294,7 @@ public class ReservationService {
                 }
             }
         }
-        return true;
+        return false;
     }
 
 
@@ -342,6 +344,7 @@ public class ReservationService {
 
         //겹치는 시간이 있다면 예외 처리
         if(isReservationTimeOverlapping(reservation)){
+            System.out.println("시발 중복 처리 있음");
             throw new ReservationDuplicatedException();
         }
 
