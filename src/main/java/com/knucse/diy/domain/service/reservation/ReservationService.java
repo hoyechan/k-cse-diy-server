@@ -75,10 +75,10 @@ public class ReservationService {
 
         //겹치는 시간대의 예약이 있는지 확인
         if(isReservationTimeOverlapping(reservation)){
+            throw new ReservationDuplicatedException();
+        }else {
             Reservation savedReservation = reservationRepository.save(reservation);
             return ReservationReadDto.fromEntity(savedReservation);
-        }else {
-            throw new ReservationDuplicatedException();
         }
     }
 
@@ -272,13 +272,23 @@ public class ReservationService {
         if(!reservations.isEmpty()){
             for(Reservation checkReservation : reservations){
 
+                //예약 수정 시 발생하는 오류 수정
+                if(checkReservation.getId().equals(reservation.getId())){
+                    continue;
+                }
+
                 if(reservation.getStartTime().equals(checkReservation.getStartTime()) &&
                         reservation.getEndTime().equals(checkReservation.getEndTime()))
                     return true;
 
                 if (isBetweenInclusive(reservation.getStartTime(),checkReservation.getStartTime(),checkReservation.getEndTime())
                         ||  isBetweenInclusive(reservation.getEndTime(), checkReservation.getStartTime(), checkReservation.getEndTime())) {
-                    return false;
+                    return true;
+                }
+
+                if(isBetweenInclusive(checkReservation.getStartTime(), reservation.getStartTime(), reservation.getEndTime())
+                        || isBetweenInclusive(checkReservation.getEndTime(), reservation.getStartTime(), reservation.getEndTime())){
+                    return true;
                 }
             }
         }
@@ -331,7 +341,7 @@ public class ReservationService {
         reservation.updateReservation(updateDto);
 
         //겹치는 시간이 있다면 예외 처리
-        if(!isReservationTimeOverlapping(reservation)){
+        if(isReservationTimeOverlapping(reservation)){
             throw new ReservationDuplicatedException();
         }
 
