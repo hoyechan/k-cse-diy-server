@@ -4,6 +4,7 @@ import com.knucse.diy.api.key.dto.*;
 import com.knucse.diy.domain.exception.key.KeyNotFoundException;
 import com.knucse.diy.domain.exception.key.KeyRentAuthenticationFailedException;
 import com.knucse.diy.domain.exception.key.KeyReturnAuthenticationFailedException;
+import com.knucse.diy.domain.exception.key.KeyStatusMissException;
 import com.knucse.diy.domain.model.key.RoomKey;
 import com.knucse.diy.domain.model.key.RoomKeyHistory;
 import com.knucse.diy.domain.model.key.RoomKeyStatus;
@@ -90,14 +91,14 @@ public class RoomKeyService {
      * @throws com.knucse.diy.domain.exception.student.StudentNotFoundException "STUDENT_NOT_FOUND"
      */
     @Transactional
-    public RoomKeyStatus rentKey(KeyRentDto keyRentDto){
+    public KeyReadDto rentKey(KeyRentDto keyRentDto){
         RoomKey roomKey = findFirstKey(); //첫번째로 저장된 key 가져옴
 
         Student holder = studentService.findStudentByNameAndNumber(keyRentDto.studentName(), keyRentDto.studentNumber());
         System.out.println("holder.getStudentName() = " + holder.getStudentName());
         //열쇠가 반납된 상태가 아닌데, 대여 누를 시 예외처리
         if(roomKey.getStatus() != RoomKeyStatus.KEEPING){
-            throw new KeyRentAuthenticationFailedException();
+            throw new KeyStatusMissException();
         }
 
         Reservation reservationByStudentAndDate = reservationService.findReservationsByStudentAndDate(holder, LocalDate.now());
@@ -131,7 +132,7 @@ public class RoomKeyService {
 
         roomKeyHistoryRepository.save(history);
 
-        return roomKey.getStatus(); // 열쇠 상태 return
+        return KeyReadDto.fromEntity(roomKey,holder);
     }
 
     /**
@@ -142,14 +143,14 @@ public class RoomKeyService {
      * @throws com.knucse.diy.domain.exception.student.StudentNotFoundException "STUDENT_NOT_FOUND"
      */
     @Transactional
-    public RoomKeyStatus returnKey(KeyReturnDto keyReturnDto){
+    public KeyReadDto returnKey(KeyReturnDto keyReturnDto){
         Student lastUser = studentService.findStudentByNameAndNumber(keyReturnDto.studentName(), keyReturnDto.studentNumber());
 
         RoomKey roomKey = findFirstKey();
 
         //열쇠의 상태가 사용중이 아닌데, 반납을 누를 시 예외처리
         if(roomKey.getStatus() != RoomKeyStatus.USING){
-            throw new KeyRentAuthenticationFailedException();
+            throw new KeyStatusMissException();
         }
 
         Reservation reservationByStudentAndDate = reservationService.findReservationsByStudentAndDate(lastUser, LocalDate.now());
@@ -183,7 +184,7 @@ public class RoomKeyService {
 
         roomKeyHistoryRepository.save(history);
 
-        return roomKey.getStatus();
+        return KeyReadDto.fromEntity(roomKey,lastUser);
     }
 
     public void updateRoomKey(Student student, RoomKeyStatus roomKeyStatus){

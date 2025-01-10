@@ -73,11 +73,11 @@ public class RoomKeyAnonymousController {
             @ApiResponse(responseCode = "201", description = "열쇠 대여 성공"),
             @ApiResponse(responseCode = "400", description = "열쇠 대여 실패 (code: KEY_RENT_AUTHENTICATION_FAILED)")
     })
-    public ResponseEntity<ApiSuccessResult<RoomKeyStatus>> rentRoomKey(
+    public ResponseEntity<ApiSuccessResult<KeyReadDto>> rentRoomKey(
             @Valid @RequestBody KeyRentDto requestBody
     ) {
 
-        RoomKeyStatus responseBody = roomKeyService.rentKey(requestBody);
+        KeyReadDto responseBody = roomKeyService.rentKey(requestBody);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -91,11 +91,11 @@ public class RoomKeyAnonymousController {
             @ApiResponse(responseCode = "201", description = "열쇠 반납 성공"),
             @ApiResponse(responseCode = "400", description = "열쇠 반납 실패 (code: KEY_RETURN_AUTHENTICATION_FAILED)")
     })
-    public ResponseEntity<ApiSuccessResult<RoomKeyStatus>> returnRoomKey(
+    public ResponseEntity<ApiSuccessResult<KeyReadDto>> returnRoomKey(
             @Valid @RequestBody KeyReturnDto requestBody
     ) {
 
-        RoomKeyStatus responseBody = roomKeyService.returnKey(requestBody);
+        KeyReadDto responseBody = roomKeyService.returnKey(requestBody);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
