@@ -325,8 +325,8 @@ public class ReservationService {
      */
     @Transactional
     public void updateReservation(ReservationUpdateDto updateDto){
-        Reservation reservation = findReservationById(updateDto.ReservationId());
-        verifyAuthCode(updateDto.ReservationId(), updateDto.authCode());
+        Reservation reservation = findReservationById(updateDto.reservationId());
+        verifyAuthCode(updateDto.reservationId(), updateDto.authCode());
 
         reservation.updateReservation(updateDto);
 

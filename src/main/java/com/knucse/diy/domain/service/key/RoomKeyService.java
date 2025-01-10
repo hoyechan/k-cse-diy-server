@@ -15,8 +15,10 @@ import com.knucse.diy.domain.service.reservation.ReservationService;
 import com.knucse.diy.domain.service.student.StudentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.Key;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,16 +33,16 @@ public class RoomKeyService {
     private final StudentService studentService;
     private final RoomKeyHistoryRepository roomKeyHistoryRepository;
 
-//    /**
-//     * KeyCreateDto를 기반으로 Key를 생성합니다.
-//     * @param keyCreateDto
-//     * @return 생성된 key의 ReadDto
-//     */
-//    @Transactional(isolation = Isolation.REPEATABLE_READ)
-//    public KeyReadDto createKey(KeyCreateDto keyCreateDto){
-//        Key key = keyRepository.save(keyCreateDto.toEntity());
-//        return KeyReadDto.fromEntity(key,null);
-//    }
+    /**
+     * KeyCreateDto를 기반으로 Key를 생성합니다.
+     * @return 생성된 key의 ReadDto
+     */
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    public KeyReadDto createKey(){
+        KeyCreateDto keyCreateDto = new KeyCreateDto();
+        RoomKey roomKey= roomKeyRepository.save(keyCreateDto.toEntity());
+        return KeyReadDto.fromEntity(roomKey,roomKey.getHolder());
+    }
 
     /**
      * 모든 Key를 조회합니다.
@@ -91,8 +93,8 @@ public class RoomKeyService {
     public RoomKeyStatus rentKey(KeyRentDto keyRentDto){
         RoomKey roomKey = findFirstKey(); //첫번째로 저장된 key 가져옴
 
-        Student holder = studentService.findStudentByNameAndNumber(keyRentDto.StudentName(), keyRentDto.StudentNumber());
-
+        Student holder = studentService.findStudentByNameAndNumber(keyRentDto.studentName(), keyRentDto.studentNumber());
+        System.out.println("holder.getStudentName() = " + holder.getStudentName());
         //열쇠가 반납된 상태가 아닌데, 대여 누를 시 예외처리
         if(roomKey.getStatus() != RoomKeyStatus.KEEPING){
             throw new KeyRentAuthenticationFailedException();
@@ -139,8 +141,9 @@ public class RoomKeyService {
      * @throws KeyNotFoundException "KET_NOT_FOUND"
      * @throws com.knucse.diy.domain.exception.student.StudentNotFoundException "STUDENT_NOT_FOUND"
      */
+    @Transactional
     public RoomKeyStatus returnKey(KeyReturnDto keyReturnDto){
-        Student lastUser = studentService.findStudentByNameAndNumber(keyReturnDto.StudentName(), keyReturnDto.StudentNumber());
+        Student lastUser = studentService.findStudentByNameAndNumber(keyReturnDto.studentName(), keyReturnDto.studentNumber());
 
         RoomKey roomKey = findFirstKey();
 

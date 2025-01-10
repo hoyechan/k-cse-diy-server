@@ -131,7 +131,7 @@ public class ReservationAnonymousController {
     }
 
 
-    @PostMapping("/reservation/update")
+    @PatchMapping("/reservation/update")
     @Operation(summary = "예약 수정", description = "사용자는 기존 예약 정보를 수정할 수 있습니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "예약 수정 성공"),
@@ -147,7 +147,7 @@ public class ReservationAnonymousController {
                 .body(ApiResponseUtil.success(HttpStatus.NO_CONTENT));
     }
 
-    @PostMapping("/reservation/delete")
+    @DeleteMapping("/reservation")
     @Operation(summary = "예약 삭제", description = "사용자는 기존 예약 정보를 삭제할 수 있습니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "예약 삭제 성공"),

@@ -11,14 +11,19 @@ import java.time.LocalDateTime;
 public record KeyReadDto(
         Long id,
         String holderName,
-        RoomKeyStatus status,
-        LocalDateTime returnedDateTime,
-        LocalDateTime rentalDateTime
+        RoomKeyStatus status
 ) {
     public static KeyReadDto fromEntity(RoomKey key, Student holder){
+        String holderName;
+        if(holder == null){
+            holderName = "null";
+        }else{
+            holderName = holder.getStudentName();
+        }
+
         return KeyReadDto.builder()
                 .id(key.getId())
-                .holderName(holder.getStudentName())
+                .holderName(holderName)
                 .status(key.getStatus())
                 .build();
     }

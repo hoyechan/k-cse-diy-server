@@ -4,6 +4,6 @@ import com.knucse.diy.domain.model.student.Student;
 import jakarta.validation.constraints.NotNull;
 
 public record KeyRentDto(
-        @NotNull String StudentName, @NotNull String StudentNumber
+        @NotNull String studentName, @NotNull String studentNumber
         ) {
 }
