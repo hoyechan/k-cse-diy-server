@@ -138,13 +138,14 @@ public class ReservationAnonymousController {
             @ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음 (code: RESERVATION_NOT_FOUND)"),
             @ApiResponse(responseCode = "400", description = "인증 코드는 4자리 숫자여야 함 (code: AUTHENTICATION_CODE_MUST_BE_4_DIGITS)")
     })
-    public ResponseEntity<ApiSuccessResult<Void>> updateReservation(
+    public ResponseEntity<ApiSuccessResult<ReservationReadDto>> updateReservation(
             @Valid @RequestBody ReservationUpdateDto requestBody
     ) {
-        reservationService.updateReservation(requestBody);
+        ReservationReadDto responseBody = reservationService.updateReservation(requestBody);
+
         return ResponseEntity
-                .status(HttpStatus.NO_CONTENT)
-                .body(ApiResponseUtil.success(HttpStatus.NO_CONTENT));
+                .status(HttpStatus.OK)
+                .body(ApiResponseUtil.success(HttpStatus.OK, responseBody));
     }
 
     @DeleteMapping("/reservation")

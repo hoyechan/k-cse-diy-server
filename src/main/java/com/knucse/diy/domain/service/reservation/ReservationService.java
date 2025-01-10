@@ -324,15 +324,18 @@ public class ReservationService {
      * @throws ReservationDuplicatedException "RESERVATION_DUPLICATED"
      */
     @Transactional
-    public void updateReservation(ReservationUpdateDto updateDto){
+    public ReservationReadDto updateReservation(ReservationUpdateDto updateDto){
         Reservation reservation = findReservationById(updateDto.reservationId());
         verifyAuthCode(updateDto.reservationId(), updateDto.authCode());
 
         reservation.updateReservation(updateDto);
 
+        //겹치는 시간이 있다면 예외 처리
         if(!isReservationTimeOverlapping(reservation)){
             throw new ReservationDuplicatedException();
         }
+
+        return ReservationReadDto.fromEntity(reservation);
     }
 
     /**
