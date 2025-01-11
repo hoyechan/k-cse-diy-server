@@ -17,7 +17,8 @@ public record ReservationReadDto(
         LocalTime startTime,
         LocalTime endTime,
         String reason,
-        ReservationStatus status
+        ReservationStatus status,
+        String cancelledReason
 ) {
     public static ReservationReadDto fromEntity(Reservation reservation) {
         return ReservationReadDto.builder()
@@ -29,6 +30,7 @@ public record ReservationReadDto(
                 .endTime(reservation.getEndTime())
                 .reason(reservation.getReason())
                 .status(reservation.getStatus())
+                .cancelledReason(reservation.getCancelledReason())
                 .build();
     }
 }

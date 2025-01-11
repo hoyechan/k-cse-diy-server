@@ -1,5 +1,6 @@
 package com.knucse.diy.api.reservation._diyManager;
 
+import com.knucse.diy.api.reservation.dto.ReservationCancelDto;
 import com.knucse.diy.api.reservation.dto.ReservationCreateDto;
 import com.knucse.diy.api.reservation.dto.ReservationReadDto;
 import com.knucse.diy.api.reservation.dto.ReservationStatusUpdateDto;
@@ -37,6 +38,22 @@ public class ReservationDiyManagerController {
             @RequestBody ReservationStatusUpdateDto requestBody
     ) {
         ReservationReadDto responseBody = reservationService.updateReservationStatus(requestBody);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponseUtil.success(HttpStatus.OK, responseBody));
+    }
+
+    @PatchMapping("/reservation/cancel")
+    @Operation(summary = "예약 거절", description = "동연의장은 대기중인 예약을 거절할 수 있습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "예약 거절 성공"),
+            @ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음 (code: RESERVATION_NOT_FOUND)"),
+    })
+    public ResponseEntity<ApiSuccessResult<ReservationReadDto>> cancelReservation(
+            @RequestBody ReservationCancelDto requestBody
+    ) {
+        ReservationReadDto responseBody = reservationService.cancelReservation(requestBody);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

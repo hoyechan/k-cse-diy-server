@@ -23,6 +23,7 @@ public record ReservationCreateDto(
                 .reason(reason)
                 .authCode(hashedAuthCode)
                 .status(ReservationStatus.PENDING)
+                .cancelledReason(null)
                 .build();
     }
 }

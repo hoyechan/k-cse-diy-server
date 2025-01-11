@@ -41,12 +41,18 @@ public class Reservation extends BaseTimeEntity {
     )
     private String reason; //예약 사유
 
+    @Column(name = "cancelled_reason",
+            nullable = true,
+            length = 50
+    )
+    private String cancelledReason; //예약 거절 사유
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private ReservationStatus status; // 예약 상태 (대기, 승인, 취소)
 
     @Builder
-    public Reservation(Student student, LocalDate reservationDate, LocalTime startTime, LocalTime endTime,String reason,String authCode, ReservationStatus status) {
+    public Reservation(Student student, LocalDate reservationDate, LocalTime startTime, LocalTime endTime,String reason,String authCode, ReservationStatus status, String cancelledReason) {
         this.student = student;
         this.reservationDate = reservationDate;
         this.startTime = startTime;
@@ -54,10 +60,16 @@ public class Reservation extends BaseTimeEntity {
         this.reason = reason;
         this.authCode = authCode;
         this.status = status;
+        this.cancelledReason = cancelledReason;
     }
 
     public void updateStatus(ReservationStatus status) {
         this.status = status;
+    }
+
+    public void cancelReservation(ReservationStatus status, String cancelledReason) {
+        this.status = status;
+        this.cancelledReason = cancelledReason;
     }
 
     public void updateReservation(ReservationUpdateDto updateDto){

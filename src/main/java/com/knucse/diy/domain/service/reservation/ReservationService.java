@@ -7,6 +7,7 @@ import com.knucse.diy.domain.exception.reservation.ReservationDuplicatedExceptio
 import com.knucse.diy.domain.exception.reservation.ReservationNotFoundException;
 import com.knucse.diy.domain.exception.reservation.ReservationLimitReachedException;
 import com.knucse.diy.domain.model.reservation.Reservation;
+import com.knucse.diy.domain.model.reservation.ReservationStatus;
 import com.knucse.diy.domain.model.student.Student;
 import com.knucse.diy.domain.persistence.reservation.ReservationRepository;
 import com.knucse.diy.domain.service.student.StudentService;
@@ -323,6 +324,20 @@ public class ReservationService {
         Reservation reservation = findReservationById(updateDto.reservationId());
 
         reservation.updateStatus(updateDto.reservationStatus());
+
+        return ReservationReadDto.fromEntity(reservation);
+    }
+
+    /**
+     * ReservationCancelDto를 기반으로 reservation을 수정합니다.
+     * @param cancelDto ReservationCancelDto
+     * @return 바뀐 Reservation의 ReadDto
+     * @throws ReservationNotFoundException "RESERVATION_NOT_FOUND"
+     */
+    @Transactional
+    public ReservationReadDto cancelReservation(ReservationCancelDto cancelDto) {
+        Reservation reservation = findReservationById(cancelDto.reservationId());
+        reservation.cancelReservation(ReservationStatus.CANCELLED, cancelDto.cancelledReason());
 
         return ReservationReadDto.fromEntity(reservation);
     }
