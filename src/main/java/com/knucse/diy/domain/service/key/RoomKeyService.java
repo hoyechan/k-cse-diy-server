@@ -148,6 +148,11 @@ public class RoomKeyService {
 
         RoomKey roomKey = findFirstKey();
 
+        //열쇠를 대여한 사람이 아니라면 예외처리
+        if(roomKey.getHolder() != lastUser){
+            throw new KeyReturnAuthenticationFailedException();
+        }
+
         //열쇠의 상태가 사용중이 아닌데, 반납을 누를 시 예외처리
         if(roomKey.getStatus() != RoomKeyStatus.USING){
             throw new KeyStatusMissException();
