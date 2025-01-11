@@ -67,6 +67,10 @@ public class Reservation extends BaseTimeEntity {
         this.status = status;
     }
 
+    public void updateAuthCode(String authCode) {
+        this.authCode = authCode;
+    }
+
     public void cancelReservation(ReservationStatus status, String cancelledReason) {
         this.status = status;
         this.cancelledReason = cancelledReason;

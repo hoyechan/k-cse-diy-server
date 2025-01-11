@@ -343,6 +343,32 @@ public class ReservationService {
     }
 
     /**
+     * ReservationAuthCodeUpdateDto를 기반으로 reservation을 수정합니다.
+     * @param updateDto ReservationAuthCodeUpdateDto
+     * @return 바뀐 Reservation의 ReadDto
+     * @throws ReservationNotFoundException "RESERVATION_NOT_FOUND"
+     */
+    @Transactional
+    public ReservationReadDto updateAuthCode(ReservationAuthCodeUpdateDto updateDto) {
+        Reservation reservation = findReservationById(updateDto.reservationId());
+
+        String authCode = updateDto.newAuthCode();
+        //인증번호 길이가 4자리 숫자가 아니라면 예외처리
+        if (!authCode.matches("\\d{4}")) {
+            throw new AuthCodeBadRequestException();
+        }
+
+        String hashedCode = passwordEncoder.encode(authCode); // 인증번호 해싱
+
+        reservation.updateAuthCode(hashedCode);
+
+        return ReservationReadDto.fromEntity(reservation);
+    }
+
+
+
+
+    /**
      * ReservationUpdateDto를 기반으로 reservation을 수정합니다.
      *
      * @param updateDto ReservationUpdateDto
