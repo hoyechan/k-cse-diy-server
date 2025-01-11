@@ -174,7 +174,7 @@ public class RoomKeyService {
 //
 //        LocalDateTime now = LocalDateTime.now();
 
-        roomKey.updateRoomKey(null,RoomKeyStatus.KEEPING);
+        roomKey.updateRoomKey(lastUser,RoomKeyStatus.KEEPING);
 
         RoomKeyHistory history = RoomKeyHistory.builder()
                     .student(lastUser)
