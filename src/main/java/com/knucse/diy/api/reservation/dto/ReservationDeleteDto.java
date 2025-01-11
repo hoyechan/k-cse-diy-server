@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalTime;
 
 public record ReservationDeleteDto(
-        @NotNull Long ReservationId,
+        @NotNull Long reservationId,
         @NotNull String authCode
 ) {
 }
