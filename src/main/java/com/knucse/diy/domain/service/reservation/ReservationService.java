@@ -400,9 +400,9 @@ public class ReservationService {
      */
     @Transactional
     public void deleteReservation(ReservationDeleteDto reservationDeleteDto){
-        Reservation reservation = findReservationById(reservationDeleteDto.ReservationId());
+        Reservation reservation = findReservationById(reservationDeleteDto.reservationId());
 
-        verifyAuthCode(reservationDeleteDto.ReservationId(), reservationDeleteDto.authCode());
+        verifyAuthCode(reservationDeleteDto.reservationId(), reservationDeleteDto.authCode());
 
         reservationRepository.delete(reservation);
     }
