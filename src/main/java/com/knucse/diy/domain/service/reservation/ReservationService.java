@@ -381,4 +381,11 @@ public class ReservationService {
         reservationRepository.delete(reservation);
     }
 
+    @Transactional
+    public void deleteReservation(Long reservationId){
+        Reservation reservation = findReservationById(reservationId);
+
+        reservationRepository.delete(reservation);
+    }
+
 }

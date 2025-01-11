@@ -1,9 +1,6 @@
 package com.knucse.diy.api.reservation._diyManager;
 
-import com.knucse.diy.api.reservation.dto.ReservationCancelDto;
-import com.knucse.diy.api.reservation.dto.ReservationCreateDto;
-import com.knucse.diy.api.reservation.dto.ReservationReadDto;
-import com.knucse.diy.api.reservation.dto.ReservationStatusUpdateDto;
+import com.knucse.diy.api.reservation.dto.*;
 import com.knucse.diy.common.util.api.ApiResponseUtil;
 import com.knucse.diy.common.util.api.ApiSuccessResult;
 import com.knucse.diy.domain.model.reservation.ReservationStatus;
@@ -58,6 +55,24 @@ public class ReservationDiyManagerController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ApiResponseUtil.success(HttpStatus.OK, responseBody));
+    }
+
+    //인증 번호 새로 만들어주는 api
+    //인증 번호 없어도 삭제 가능한 api
+    @DeleteMapping("/reservation/delete/{reservationId}")
+    @Operation(summary = "예약 삭제", description = "관리자는 기존 예약 정보를 삭제할 수 있습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "예약 삭제 성공"),
+            @ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음 (code: RESERVATION_NOT_FOUND)"),
+    })
+    public ResponseEntity<ApiSuccessResult<Void>> deleteReservation(
+            @PathVariable("reservationId") Long reservationId
+    ) {
+        reservationService.deleteReservation(reservationId);
+
+        return ResponseEntity
+                .status(HttpStatus.NO_CONTENT)
+                .body(ApiResponseUtil.success(HttpStatus.NO_CONTENT));
     }
 
 }
