@@ -1,4 +1,4 @@
-package com.knucse.diy.common.config;
+package com.knucse.diy.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
