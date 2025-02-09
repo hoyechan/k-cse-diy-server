@@ -42,6 +42,18 @@ public class StudentService {
                 .orElseThrow(StudentNotFoundException::new);
     }
 
+    /**
+     * 이름을 통해 학생을 조회합니다.
+     *
+     * @param studentName 학생 이름
+     * @return 해당 이름을 가진 학생 엔티티
+     * @throws StudentNotFoundException "STUDENT_NOT_FOUND"
+     */
+    public Student findStudentByStudentName(String studentName) {
+        return studentRepository.findByStudentName(studentName)
+                .orElseThrow(StudentNotFoundException::new);
+    }
+
     public List<Student> findAllStudents() {
         return studentRepository.findAll();
     }

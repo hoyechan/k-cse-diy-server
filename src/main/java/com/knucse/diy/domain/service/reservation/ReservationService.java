@@ -259,6 +259,53 @@ public class ReservationService {
 //        return differenceInMinutes < 30;
 //    }
 
+    /**
+     * 학생 이름을 기반으로 예약을 조회합니다.
+     * @param studentName
+     * @return 조회된 예약의 readDto
+     */
+    public List<ReservationReadDto> findReservationByStudentName(String studentName){
+        Student student = studentService.findStudentByStudentName(studentName);
+
+        List<Reservation> reservations = reservationRepository.findByStudent(student);
+
+        // Reservation -> ReservationReadDto 변환
+        return reservations.stream()
+                .map(ReservationReadDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 학생 학번을 기반으로 예약을 조회합니다.
+     * @param studentNumber
+     * @return 조회된 예약의 readDto
+     */
+    public List<ReservationReadDto> findReservationByStudentNumber(String studentNumber){
+        Student student = studentService.findStudentByStudentNumber(studentNumber);
+
+        List<Reservation> reservations = reservationRepository.findByStudent(student);
+
+        // Reservation -> ReservationReadDto 변환
+        return reservations.stream()
+                .map(ReservationReadDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 예약 상태를 기반으로 예약을 조회합니다.
+     * @param status
+     * @return 조회된 예약의 readDto
+     */
+    public List<ReservationReadDto> findReservationByStatus(ReservationStatus status){
+
+        List<Reservation> reservations = reservationRepository.findByStatus(status);
+
+        // Reservation -> ReservationReadDto 변환
+        return reservations.stream()
+                .map(ReservationReadDto::fromEntity)
+                .collect(Collectors.toList());
+    }
+
 
     /**
      * 입력받은 reservation을 기반으로 겹치는 시간대의 reservation이 있는지 검사
@@ -385,7 +432,7 @@ public class ReservationService {
 
         //겹치는 시간이 있다면 예외 처리
         if(isReservationTimeOverlapping(reservation)){
-            System.out.println("시발 중복 처리 있음");
+            System.out.println("중복 처리 있음");
             throw new ReservationDuplicatedException();
         }
 

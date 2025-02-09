@@ -1,6 +1,7 @@
 package com.knucse.diy.domain.persistence.reservation;
 
 import com.knucse.diy.domain.model.reservation.Reservation;
+import com.knucse.diy.domain.model.reservation.ReservationStatus;
 import com.knucse.diy.domain.model.student.Student;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -23,6 +24,7 @@ public interface ReservationRepository extends JpaRepository<Reservation,Long> {
 
     List<Reservation> findByReservationDateBetween(LocalDate startDate, LocalDate endDate);
     List<Reservation> findByStudent(Student student);
+    List<Reservation> findByStatus(ReservationStatus status);
 
     @Query("SELECT r FROM Reservation r " +
             "WHERE r.student = :student " +

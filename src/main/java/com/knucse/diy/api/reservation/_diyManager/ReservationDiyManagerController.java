@@ -16,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/admin")
 @RequiredArgsConstructor
@@ -91,4 +93,50 @@ public class ReservationDiyManagerController {
                 .body(ApiResponseUtil.success(HttpStatus.NO_CONTENT));
     }
 
+    @GetMapping("/reservation/studentName")
+    @Operation(summary = "특정 학생 이름으로 예약 조회", description = "관리자는 학생의 이름으로 예약을 조회할 수 있습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "예약 조회 성공"),
+            @ApiResponse(responseCode = "404", description = "학생을 찾을 수 없음 (code: STUDENT_NOT_FOUND)")
+    })
+    public ResponseEntity<ApiSuccessResult<List<ReservationReadDto>>> findReservationByStudentName(
+            @RequestParam("studentName") String studentName
+    ) {
+        List<ReservationReadDto> responseBody = reservationService.findReservationByStudentName(studentName);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponseUtil.success(HttpStatus.OK, responseBody));
+    }
+
+    @GetMapping("/reservation/studentNumber")
+    @Operation(summary = "특정 학생 학번으로 예약 조회", description = "관리자는 학생의 학번으로 예약을 조회할 수 있습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "예약 조회 성공"),
+            @ApiResponse(responseCode = "404", description = "학생을 찾을 수 없음 (code: STUDENT_NOT_FOUND)")
+    })
+    public ResponseEntity<ApiSuccessResult<List<ReservationReadDto>>> findReservationByStudentNumber(
+            @RequestParam("studentNumber") String studentNumber
+    ) {
+        List<ReservationReadDto> responseBody = reservationService.findReservationByStudentNumber(studentNumber);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponseUtil.success(HttpStatus.OK, responseBody));
+    }
+
+    @GetMapping("/reservation/status")
+    @Operation(summary = "예약 상태로 예약 조회", description = "관리자는 예약 상태로 예약을 조회할 수 있습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "예약 조회 성공"),
+    })
+    public ResponseEntity<ApiSuccessResult<List<ReservationReadDto>>> findReservationByStatus(
+            @RequestParam("status") ReservationStatus status
+    ) {
+        List<ReservationReadDto> responseBody = reservationService.findReservationByStatus(status);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponseUtil.success(HttpStatus.OK, responseBody));
+    }
 }

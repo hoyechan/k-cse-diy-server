@@ -32,7 +32,7 @@ public class RoomKeyService {
     private final RoomKeyRepository roomKeyRepository;
     private final ReservationService reservationService;
     private final StudentService studentService;
-    private final RoomKeyHistoryRepository roomKeyHistoryRepository;
+    private final RoomKeyHistoryService roomKeyHistoryService;
 
     /**
      * KeyCreateDto를 기반으로 Key를 생성합니다.
@@ -124,13 +124,7 @@ public class RoomKeyService {
 
         roomKey.updateRoomKey(holder,RoomKeyStatus.USING);
 
-        RoomKeyHistory history = RoomKeyHistory.builder()
-                    .student(holder)
-                    .date(LocalDateTime.now())
-                    .status(RoomKeyStatus.USING)
-                    .build();
-
-        roomKeyHistoryRepository.save(history);
+        roomKeyHistoryService.createRoomKeyHistory(holder,RoomKeyStatus.USING);
 
         return KeyReadDto.fromEntity(roomKey,holder);
     }
@@ -181,20 +175,16 @@ public class RoomKeyService {
 
         roomKey.updateRoomKey(lastUser,RoomKeyStatus.KEEPING);
 
-        RoomKeyHistory history = RoomKeyHistory.builder()
-                    .student(lastUser)
-                    .date(LocalDateTime.now())
-                    .status(RoomKeyStatus.KEEPING)
-                    .build();
-
-        roomKeyHistoryRepository.save(history);
+        roomKeyHistoryService.createRoomKeyHistory(lastUser,RoomKeyStatus.KEEPING);
 
         return KeyReadDto.fromEntity(roomKey,lastUser);
     }
 
-    public void updateRoomKey(Student student, RoomKeyStatus roomKeyStatus){
+    public KeyReadDto updateRoomKey(Student student, RoomKeyStatus roomKeyStatus){
         RoomKey key = findFirstKey();
         key.updateRoomKey(student, roomKeyStatus);
+
+        return KeyReadDto.fromEntity(key,student);
     }
 
 
