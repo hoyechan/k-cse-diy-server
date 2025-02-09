@@ -35,8 +35,6 @@ public class AdminAccountInitializer {
             admin.setRole(Role.ROLE_DIY_MANAGER);
 
             adminRepository.save(admin);
-
-
         }
     }
 }

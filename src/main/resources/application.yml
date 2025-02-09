@@ -15,12 +15,9 @@ spring:
             hibernate:
                 dialect: org.hibernate.dialect.MySQLDialect
 
-
 app:
     jwt:
         secret: ${JWT_SECRET}
-
-
 admin:
     username: ${DIY_ADMIN_USERNAME}
     password: ${DIY_ADMIN_PASSWORD}
