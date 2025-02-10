@@ -384,7 +384,7 @@ public class ReservationService {
     @Transactional
     public ReservationReadDto cancelReservation(ReservationCancelDto cancelDto) {
         Reservation reservation = findReservationById(cancelDto.reservationId());
-        reservation.cancelReservation(ReservationStatus.REJECTED, cancelDto.cancelledReason());
+        reservation.cancelReservation(ReservationStatus.CANCELLD, cancelDto.cancelledReason());
 
         return ReservationReadDto.fromEntity(reservation);
     }
