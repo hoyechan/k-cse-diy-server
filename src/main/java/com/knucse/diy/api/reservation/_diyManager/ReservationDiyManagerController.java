@@ -139,4 +139,17 @@ public class ReservationDiyManagerController {
                 .status(HttpStatus.OK)
                 .body(ApiResponseUtil.success(HttpStatus.OK, responseBody));
     }
+
+    @GetMapping("/validate-token")
+    @Operation(summary = "토큰 검증", description = "클라이언트 딴에서 토큰 검증을 하기 위한 api입니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "토큰 검증 성공"),
+            @ApiResponse(responseCode = "401", description = "토큰 검증 실패")
+    })
+    public ResponseEntity<ApiSuccessResult<Void>> validateToken(
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponseUtil.success(HttpStatus.OK, null));
+    }
 }
