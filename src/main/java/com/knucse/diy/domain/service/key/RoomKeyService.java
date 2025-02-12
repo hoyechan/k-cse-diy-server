@@ -9,6 +9,7 @@ import com.knucse.diy.domain.model.key.RoomKey;
 import com.knucse.diy.domain.model.key.RoomKeyHistory;
 import com.knucse.diy.domain.model.key.RoomKeyStatus;
 import com.knucse.diy.domain.model.reservation.Reservation;
+import com.knucse.diy.domain.model.reservation.ReservationStatus;
 import com.knucse.diy.domain.model.student.Student;
 import com.knucse.diy.domain.persistence.key.RoomKeyHistoryRepository;
 import com.knucse.diy.domain.persistence.key.RoomKeyRepository;
@@ -155,7 +156,7 @@ public class RoomKeyService {
         Reservation reservationByStudentAndDate = reservationService.findReservationsByStudentAndDate(lastUser, LocalDate.now());
 
         //입력한 학생의 예약이 당일 없다면 예외처리
-        if(reservationByStudentAndDate == null)
+        if(reservationByStudentAndDate == null || !reservationByStudentAndDate.getStatus().equals(ReservationStatus.APPROVED))
         {
             throw new KeyRentAuthenticationFailedException();
         }
