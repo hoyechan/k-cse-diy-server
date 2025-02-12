@@ -28,9 +28,9 @@ public class ReservationDiyManagerController {
     private final ReservationService reservationService;
 
     @PatchMapping("/reservation/treatment")
-    @Operation(summary = "예약 승인 또는 거부", description = "동연의장은 대기중인 예약을 승인 또는 거부할 수 있습니다.")
+    @Operation(summary = "예약 승인", description = "동연의장은 대기중인 예약을 승인할 수 있습니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "예약 상태 변경 성공"),
+            @ApiResponse(responseCode = "201", description = "예약 승인 성공"),
             @ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음 (code: RESERVATION_NOT_FOUND)"),
     })
     public ResponseEntity<ApiSuccessResult<ReservationReadDto>> updateReservationStatus(

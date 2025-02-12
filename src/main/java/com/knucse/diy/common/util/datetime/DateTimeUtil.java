@@ -47,6 +47,18 @@ public class DateTimeUtil {
         return  (target.isAfter(start) && target.isBefore(end));
     }
 
+    /**
+     * 특정 LocalDate가 두 개의 LocalDate 사이에 포함되는지 확인
+     * @param target 확인할 LocalDate
+     * @param start 시작 LocalDate (경계 포함)
+     * @param end 종료 LocalDate (경계 포함)
+     * @return 포함되면 true, 포함되지 않으면 false
+     */
+    public static boolean isBetweenInclusive(LocalDate target, LocalDate start, LocalDate end) {
+        if (target == null || start == null || end == null) return false;
+        return  (target.isAfter(start) && target.isBefore(end));
+    }
+
     public static LocalDateTime now() {
         return LocalDateTime.now();
     }

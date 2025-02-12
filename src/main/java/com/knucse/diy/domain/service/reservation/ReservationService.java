@@ -3,9 +3,10 @@ package com.knucse.diy.domain.service.reservation;
 import com.knucse.diy.api.reservation.dto.*;
 import com.knucse.diy.domain.exception.authcode.AuthCodeBadRequestException;
 import com.knucse.diy.domain.exception.authcode.AuthCodeMismatchException;
+import com.knucse.diy.domain.exception.reservation.ReservationDateOutOfRangeException;
 import com.knucse.diy.domain.exception.reservation.ReservationDuplicatedException;
 import com.knucse.diy.domain.exception.reservation.ReservationNotFoundException;
-import com.knucse.diy.domain.exception.reservation.ReservationLimitReachedException;
+import com.knucse.diy.domain.exception.reservation.ReservationDailyLimitReachedException;
 import com.knucse.diy.domain.model.reservation.Reservation;
 import com.knucse.diy.domain.model.reservation.ReservationStatus;
 import com.knucse.diy.domain.model.student.Student;
@@ -20,9 +21,9 @@ import org.springframework.data.domain.Pageable;
 import com.knucse.diy.domain.exception.student.StudentNotFoundException;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -47,7 +48,7 @@ public class ReservationService {
      * @throws StudentNotFoundException "STUDENT_NOT_FOUND"
      * @throws ReservationDuplicatedException "RESERVATION_DUPLICATED"
      * @throws AuthCodeBadRequestException "AUTHENTICATION_CODE_MUST_BE_4_DIGITS"
-     * @throws ReservationLimitReachedException "DAILY_LIMIT_REACHED"
+     * @throws ReservationDailyLimitReachedException "DAILY_LIMIT_REACHED"
      */
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public ReservationReadDto createReservation(ReservationCreateDto createDto)
@@ -57,10 +58,14 @@ public class ReservationService {
 
         Reservation reservationByStudentAndDate = findReservationsByStudentAndDate(student, createDto.reservationDate());
 
+        //현재 시간으로부터 4주 이내의 날짜만 예약할 수 있습니다
+        if(!isBetweenInclusive(createDto.reservationDate(), LocalDate.now().minusDays(1), LocalDate.now().plusDays(29))){
+            throw new ReservationDateOutOfRangeException();
+        }
 
-        //한 학생은 한 날짜에 두번 예약할 수 없습니다
+        //한 학생은 하루에 두번 예약할 수 없습니다
         if(reservationByStudentAndDate != null){
-            throw new ReservationDuplicatedException();
+            throw new ReservationDailyLimitReachedException();
         }
 
 
@@ -238,27 +243,6 @@ public class ReservationService {
                 .collect(Collectors.toList());
     }
 
-
-//    /**
-//     * ReservationId를 기반으로 해당 reservation이 현재 시점으로부터 30분 이내에 있는지 확인
-//     * @param reservationId Long
-//     * @return 30분 이후라면 true, 아니라면 false
-//     */
-//    public boolean isReservationWithin30Minutes(Long reservationId) {
-//        // 예약 정보 조회
-//        Reservation reservation = findReservationById(reservationId);
-//
-//        // 현재 시점 계산
-//        LocalDateTime now = LocalDateTime.now();
-//        LocalDateTime reservationStart = LocalDateTime.of(reservation.getReservationDate(), reservation.getStartTime());
-//
-//        // 시작 시간과 현재 시간의 차이 계산
-//        long differenceInMinutes = Duration.between(now, reservationStart).toMinutes();
-//
-//        // 시작 시간이 현재 시점으로부터 30분 이하 남아 있는지 확인
-//        return differenceInMinutes < 30;
-//    }
-
     /**
      * 학생 이름을 기반으로 예약을 조회합니다.
      * @param studentName
@@ -325,6 +309,11 @@ public class ReservationService {
                     continue;
                 }
 
+                //거절 상태의 예약은 중복 처리 안함
+                if(checkReservation.getStatus().equals(ReservationStatus.CANCELLED)){
+                    continue;
+                }
+
                 if(reservation.getStartTime().equals(checkReservation.getStartTime()) &&
                         reservation.getEndTime().equals(checkReservation.getEndTime())){
                     return true;
@@ -373,6 +362,28 @@ public class ReservationService {
         reservation.updateStatus(updateDto.reservationStatus());
 
         return ReservationReadDto.fromEntity(reservation);
+    }
+
+    /**
+     * list형태로 받은 reservation들의 status를 승인 상태로 변경합니다.
+     * @param ids List<Long>
+     * @return 변경된 reservation의 readDtoList
+     */
+    @Transactional
+    public List<ReservationReadDto> updateReservationListStatus(List<Long> ids) {
+
+        List<Reservation> reservations = new ArrayList<>();
+
+        for (Long id : ids) {
+            Reservation reservation = findReservationById(id);
+            reservation.updateStatus(ReservationStatus.APPROVED);
+            reservations.add(reservation);
+        }
+
+        // Reservation -> ReservationReadDto 변환
+        return reservations.stream()
+                .map(ReservationReadDto::fromEntity)
+                .collect(Collectors.toList());
     }
 
     /**
