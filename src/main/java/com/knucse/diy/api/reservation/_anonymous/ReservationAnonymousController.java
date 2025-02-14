@@ -103,6 +103,22 @@ public class ReservationAnonymousController {
                 .body(ApiResponseUtil.success(HttpStatus.OK, responseBody));
     }
 
+    @GetMapping("/reservation/range")
+    @Operation(summary = "날짜 범위 안의 예약 조회", description = "사용자는 특정 날짜 사이의 예약을 조회할 수 있습니다.")
+    @ApiResponses(value ={
+            @ApiResponse(responseCode = "200", description = "예약 조회 성공"),
+    })
+    public ResponseEntity<ApiSuccessResult<List<ReservationReadDto>>> findReservationByRange(
+            @RequestParam("startDate") LocalDate startDate,
+            @RequestParam("endDate") LocalDate endDate
+    ){
+        List<ReservationReadDto> responseBody = reservationService.getReservationsWithinRange(startDate, endDate);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponseUtil.success(HttpStatus.OK, responseBody));
+    }
+
 
 
     @GetMapping("/reservation/closest")

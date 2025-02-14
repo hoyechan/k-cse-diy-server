@@ -23,6 +23,7 @@ import com.knucse.diy.domain.exception.student.StudentNotFoundException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -227,14 +228,12 @@ public class ReservationService {
     }
 
     /**
-     * targetDate를 기준으로 3일 안에 있는 예약을 가져옵니다.
-     * @param targetDate LocalDate
+     * startDate와 endDate 사이의 예약을 가져옵니다.
+     * @param startDate LocalDate
+     * @param endDate LocalDate
      * @return 가져온 reservation의 ReadDtoList 혹은 빈 리스트
      */
-    public List<ReservationReadDto> getReservationsWithinThreeDay(LocalDate targetDate) {
-        LocalDate startDate = targetDate;
-        LocalDate endDate = targetDate.plusDays(2);
-
+    public List<ReservationReadDto> getReservationsWithinRange(LocalDate startDate, LocalDate endDate) {
         List<Reservation> reservations = reservationRepository.findReservationsWithinDateRange(startDate, endDate);
 
         // Reservation -> ReservationReadDto 변환
