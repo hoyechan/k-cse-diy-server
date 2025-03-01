@@ -386,18 +386,40 @@ public class ReservationService {
     }
 
     /**
-     * ReservationCancelDto를 기반으로 reservation을 수정합니다.
+     * list형태로 받은 reservation들의 status를 거절 상태로 변경합니다.
      * @param cancelDto ReservationCancelDto
-     * @return 바뀐 Reservation의 ReadDto
-     * @throws ReservationNotFoundException "RESERVATION_NOT_FOUND"
+     * @return 변경된 reservation의 readDtoList
      */
     @Transactional
-    public ReservationReadDto cancelReservation(ReservationCancelDto cancelDto) {
-        Reservation reservation = findReservationById(cancelDto.reservationId());
-        reservation.cancelReservation(ReservationStatus.CANCELLED, cancelDto.cancelledReason());
+    public List<ReservationReadDto> cancelReservationList(ReservationCancelDto cancelDto) {
 
-        return ReservationReadDto.fromEntity(reservation);
+        List<Reservation> reservations = new ArrayList<>();
+
+        for (Long id : cancelDto.reservationIds()) {
+            Reservation reservation = findReservationById(id);
+            reservation.cancelReservation(ReservationStatus.CANCELLED, cancelDto.cancelledReason());
+            reservations.add(reservation);
+        }
+
+        // Reservation -> ReservationReadDto 변환
+        return reservations.stream()
+                .map(ReservationReadDto::fromEntity)
+                .collect(Collectors.toList());
     }
+
+//    /**
+//     * ReservationCancelDto를 기반으로 reservation을 수정합니다.
+//     * @param cancelDto ReservationCancelDto
+//     * @return 바뀐 Reservation의 ReadDto
+//     * @throws ReservationNotFoundException "RESERVATION_NOT_FOUND"
+//     */
+//    @Transactional
+//    public ReservationReadDto cancelReservation(ReservationCancelDto cancelDto) {
+//        //Reservation reservation = findReservationById(cancelDto.reservationId());
+//        //reservation.cancelReservation(ReservationStatus.CANCELLED, cancelDto.cancelledReason());
+//
+//        return ReservationReadDto.fromEntity(reservation);
+//    }
 
     /**
      * ReservationAuthCodeUpdateDto를 기반으로 reservation을 수정합니다.

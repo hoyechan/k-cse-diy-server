@@ -33,7 +33,7 @@ public class ReservationDiyManagerController {
             @ApiResponse(responseCode = "201", description = "예약 승인 성공"),
             @ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음 (code: RESERVATION_NOT_FOUND)"),
     })
-    public ResponseEntity<ApiSuccessResult<ReservationReadDto>> updateReservationStatus(
+    public ResponseEntity<ApiSuccessResult<ReservationReadDto>> approveReservation(
             @RequestBody ReservationStatusUpdateDto requestBody
     ) {
         ReservationReadDto responseBody = reservationService.updateReservationStatus(requestBody);
@@ -43,16 +43,48 @@ public class ReservationDiyManagerController {
                 .body(ApiResponseUtil.success(HttpStatus.OK, responseBody));
     }
 
-    @PatchMapping("/reservation/cancel")
-    @Operation(summary = "예약 거절", description = "동연의장은 대기중인 예약을 거절할 수 있습니다.")
+    @PatchMapping("/reservation/treatment-list")
+    @Operation(summary = "예약 리스트 승인", description = "동연의장은 대기중인 예약들을 승인할 수 있습니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "예약 거절 성공"),
-            @ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음 (code: RESERVATION_NOT_FOUND)"),
+            @ApiResponse(responseCode = "201", description = "예약들 승인 성공"),
+            @ApiResponse(responseCode = "404", description = "예약들을 찾을 수 없음 (code: RESERVATION_NOT_FOUND)"),
     })
-    public ResponseEntity<ApiSuccessResult<ReservationReadDto>> cancelReservation(
+    public ResponseEntity<ApiSuccessResult<List<ReservationReadDto>>> approveReservationList(
+            @RequestBody List<Long> requestBody
+    ) {
+        List<ReservationReadDto> responseBody = reservationService.updateReservationListStatus(requestBody);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ApiResponseUtil.success(HttpStatus.OK, responseBody));
+    }
+//
+//    @PatchMapping("/reservation/cancel")
+//    @Operation(summary = "예약 거절", description = "동연의장은 대기중인 예약을 거절할 수 있습니다.")
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "201", description = "예약 거절 성공"),
+//            @ApiResponse(responseCode = "404", description = "예약을 찾을 수 없음 (code: RESERVATION_NOT_FOUND)"),
+//    })
+//    public ResponseEntity<ApiSuccessResult<ReservationReadDto>> cancelReservation(
+//            @RequestBody ReservationCancelDto requestBody
+//    ) {
+//        ReservationReadDto responseBody = reservationService.cancelReservation(requestBody);
+//
+//        return ResponseEntity
+//                .status(HttpStatus.OK)
+//                .body(ApiResponseUtil.success(HttpStatus.OK, responseBody));
+//    }
+
+    @PatchMapping("/reservation/cancel")
+    @Operation(summary = "예약 리스트 거절", description = "동연의장은 대기중인 예약들을 거절할 수 있습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "예약들 거절 성공"),
+            @ApiResponse(responseCode = "404", description = "예약들을 찾을 수 없음 (code: RESERVATION_NOT_FOUND)"),
+    })
+    public ResponseEntity<ApiSuccessResult<List<ReservationReadDto>>> cancelReservationList(
             @RequestBody ReservationCancelDto requestBody
     ) {
-        ReservationReadDto responseBody = reservationService.cancelReservation(requestBody);
+        List<ReservationReadDto> responseBody = reservationService.cancelReservationList(requestBody);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
